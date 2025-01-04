@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Felix-Asante/pennyPilot-go-api/src/api/handlers"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -22,10 +23,11 @@ func NewApiServer(port string) *ApiServer {
 
 func (s ApiServer) Start() {
 	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	setupMiddlewares(r)
+	r.Route("/api/v1", func(route chi.Router) {
+		handlers := handlers.NewHandlers(&route)
+		handlers.SetupRoutes()
+	})
 
 	fmt.Printf("Starting server...%s", s.port)
 	error := http.ListenAndServe(s.port, r)
@@ -37,4 +39,12 @@ func (s ApiServer) Start() {
 		fmt.Print("Server running on port " + s.port)
 	}
 
+}
+
+func setupMiddlewares(r *chi.Mux) {
+	router := *r
+	router.Use(middleware.RequestID)
+	router.Use(middleware.RealIP)
+	router.Use(middleware.Logger)
+	router.Use(middleware.Recoverer)
 }
