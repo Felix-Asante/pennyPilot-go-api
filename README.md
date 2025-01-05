@@ -29,6 +29,6 @@ The **PennyPilot API** is a backend service for a personal budgeting and saving 
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Felix-Asante/pennyPilot-go-api.git
+   git clone https://github.com/felix-Asante/pennyPilot-go-api.git
    cd pennypilot-api
    ```
