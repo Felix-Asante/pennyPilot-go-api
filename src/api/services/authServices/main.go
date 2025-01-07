@@ -17,3 +17,7 @@ func NewAuthServices(userRepository *repositories.AuthRepository) *AuthServices 
 func (s *AuthServices) Login(email string, password string) {
 	fmt.Println("Login")
 }
+
+func (s *AuthServices) Register(email string, password string) {
+	fmt.Println("Register")
+}

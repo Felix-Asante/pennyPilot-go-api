@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/felix-Asante/pennyPilot-go-api/src/api"
-	"github.com/felix-Asante/pennyPilot-go-api/src/configs"
+	"github.com/felix-Asante/pennyPilot-go-api/src/utils"
 )
 
 func main() {
-	server := api.NewApiServer(fmt.Sprintf(":%s", configs.GetEnv("PORT")))
+	server := api.NewApiServer(fmt.Sprintf(":%s", utils.GetEnv("PORT")))
 	server.Start()
 }

@@ -32,3 +32,18 @@ The **PennyPilot API** is a backend service for a personal budgeting and saving 
    git clone https://github.com/felix-Asante/pennyPilot-go-api.git
    cd pennypilot-api
    ```
+   2. **Install dependencies**
+   ```bash
+   go mod tidy
+   ```
+2. **Setup DB**
+   Run this code to setup uuid for the database
+   ```bash
+   CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
+   ```
+   4. **Run the server**
+   ```bash
+   go run main.go
+   or
+   air
+   ```
