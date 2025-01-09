@@ -6,6 +6,7 @@ import (
 
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/repositories"
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/services/authServices"
+	"github.com/felix-Asante/pennyPilot-go-api/src/pkgs/jwt"
 	customErrors "github.com/felix-Asante/pennyPilot-go-api/src/utils/errors"
 	"gorm.io/gorm"
 )
@@ -32,18 +33,35 @@ func (handler *authRoutesHandler) signupHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	_, err := authServices.Register(request)
+	user, err := authServices.Register(request)
 
 	if err != nil {
 		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, err.Error(), nil)
 		return
 	}
+
+	claims := map[string]interface{}{"id": user.ID, "email": user.Email}
+	jwtService := jwt.NewJWTService()
+	_, token, err := jwtService.Encode(claims)
+
+	if err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.InternalServerError, err.Error(), nil)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
-	jsonResponse := map[string]bool{"success": true}
+	jsonResponse := map[string]interface{}{"user": user, "token": token}
 	json.NewEncoder(w).Encode(jsonResponse)
 }
 
 func (h *authRoutesHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
 	authServices := newAuthServices(h.db)
 	authServices.Login("email", "password")
+}
+
+func (h *authRoutesHandler) resetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+func (h *authRoutesHandler) requestResetPasswordCode(w http.ResponseWriter, r *http.Request) {
+
 }

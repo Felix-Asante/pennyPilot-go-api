@@ -28,6 +28,8 @@ const (
 	UserAlreadyExists          = "user already exists"
 	UserAlreadyExistsWithEmail = "email taken"
 	BadRequest                 = "bad request"
+	SomethingWentWrong         = "something went wrong"
+	InternalServerError        = "internal server error"
 )
 
 func DecodeAndValidate(r *http.Request, dst interface{}) error {

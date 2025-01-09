@@ -20,7 +20,7 @@ func (s *AuthServices) Login(email string, password string) {
 	fmt.Println("Login")
 }
 
-func (s *AuthServices) Register(body repositories.CreateUserRequest) (*repositories.Users, error) {
+func (s *AuthServices) Register(body repositories.CreateUserRequest) (*repositories.NewUserResponse, error) {
 	user, err := s.usersRepository.FindUserByEmail(body.Email)
 
 	if err != nil {

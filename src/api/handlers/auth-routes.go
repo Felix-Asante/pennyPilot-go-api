@@ -23,6 +23,8 @@ func (h *AuthHandler) SetupRoutes() {
 
 		route.Post("/login", authRoutesHandler.loginHandler)
 		route.Post("/signup", authRoutesHandler.signupHandler)
+		route.Post("/reset-password/request-code", authRoutesHandler.requestResetPasswordCode)
+		route.Post("/reset-password", authRoutesHandler.resetPasswordHandler)
 	})
 
 }

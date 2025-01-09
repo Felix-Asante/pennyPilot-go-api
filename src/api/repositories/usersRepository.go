@@ -3,6 +3,7 @@ package repositories
 import (
 	"time"
 
+	"github.com/felix-Asante/pennyPilot-go-api/src/pkgs/security"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -23,6 +24,16 @@ type CreateUserRequest struct {
 	Email     string `json:"email" validate:"required,email"`
 	Password  string `json:"password" validate:"required,min=8"`
 }
+
+type NewUserResponse struct {
+	ID        string     `json:"id"`
+	FirstName string     `json:"first_name"`
+	LastName  string     `json:"last_name"`
+	Email     string     `json:"email"`
+	CreatedAt *time.Time `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
+}
+
 type UsersRepository struct {
 	db *gorm.DB
 }
@@ -44,7 +55,7 @@ func (u *UsersRepository) FindUserByEmail(email string) (*Users, error) {
 	return &existingUser, error
 }
 
-func (u *UsersRepository) CreateUser(data CreateUserRequest) (*Users, error) {
+func (u *UsersRepository) CreateUser(data CreateUserRequest) (*NewUserResponse, error) {
 	user := Users{
 		FirstName: data.FirstName,
 		LastName:  data.LastName,
@@ -54,5 +65,25 @@ func (u *UsersRepository) CreateUser(data CreateUserRequest) (*Users, error) {
 
 	error := u.db.Create(&user).Error
 
-	return &user, error
+	newUser := NewUserResponse{
+		ID:        user.ID.String(),
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
+	return &newUser, error
+}
+
+func (u *Users) BeforeCreate(tx *gorm.DB) error {
+
+	password, error := security.GetHashedPassword(u.Password)
+
+	if error != nil {
+		return error
+	}
+	u.Password = password
+	return nil
 }
