@@ -54,12 +54,37 @@ func (handler *authRoutesHandler) signupHandler(w http.ResponseWriter, r *http.R
 	json.NewEncoder(w).Encode(jsonResponse)
 }
 
-func (h *authRoutesHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
-	authServices := newAuthServices(h.db)
-	authServices.Login("email", "password")
+func (handler *authRoutesHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
+	var request authServices.LoginRequest
+
+	authServices := newAuthServices(handler.db)
+
+	if err := customErrors.DecodeAndValidate(r, &request); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, err.Error(), nil)
+		return
+	}
+
+	user, err := authServices.Login(request.Email, request.Password)
+
+	if err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, err.Error(), nil)
+		return
+	}
+
+	claims := map[string]interface{}{"id": user.ID, "email": user.Email}
+	jwtService := jwt.NewJWTService()
+	_, token, err := jwtService.Encode(claims)
+
+	if err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.InternalServerError, err.Error(), nil)
+		return
+	}
+
+	jsonResponse := map[string]interface{}{"user": user, "token": token}
+	json.NewEncoder(w).Encode(jsonResponse)
 }
 
-func (h *authRoutesHandler) resetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+func (handler *authRoutesHandler) resetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 func (h *authRoutesHandler) requestResetPasswordCode(w http.ResponseWriter, r *http.Request) {

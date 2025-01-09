@@ -30,6 +30,8 @@ const (
 	BadRequest                 = "bad request"
 	SomethingWentWrong         = "something went wrong"
 	InternalServerError        = "internal server error"
+	PasswordNotMatch           = "password does not match"
+	IncorrectPassword          = "incorrect password"
 )
 
 func DecodeAndValidate(r *http.Request, dst interface{}) error {

@@ -77,6 +77,14 @@ func (u *UsersRepository) CreateUser(data CreateUserRequest) (*NewUserResponse, 
 	return &newUser, error
 }
 
+func (u *UsersRepository) FindUserById(id string) (*Users, error) {
+	var existingUser Users
+
+	error := u.db.Where("id = ?", id).Find(&existingUser).Error
+
+	return &existingUser, error
+}
+
 func (u *Users) BeforeCreate(tx *gorm.DB) error {
 
 	password, error := security.GetHashedPassword(u.Password)
