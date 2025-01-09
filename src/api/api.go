@@ -34,7 +34,7 @@ func (s ApiServer) Start() {
 		handlers.SetupRoutes(db)
 	})
 
-	fmt.Printf("Starting server...%s\n", s.addr)
+	fmt.Printf("Starting server...%s", s.addr)
 	error := http.ListenAndServe(s.addr, r)
 
 	if error != nil {
