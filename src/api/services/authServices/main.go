@@ -16,6 +16,9 @@ type LoginRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=8"`
 }
+type ResetPasswordRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
 
 func NewAuthServices(userRepository *repositories.UsersRepository) *AuthServices {
 	return &AuthServices{userRepository}
@@ -65,4 +68,18 @@ func (s *AuthServices) Register(body repositories.CreateUserRequest) (*repositor
 	}
 
 	return newUser, nil
+}
+
+func (s *AuthServices) ResetPasswordRequest(email string) (string, error) {
+	user, err := s.usersRepository.FindUserByEmail(email)
+
+	if err != nil {
+		return "", errors.New(customErrors.BadRequest)
+	}
+
+	if user.Email == "" {
+		return "", errors.New(customErrors.UserDoesNotExist)
+	}
+
+	return "", nil
 }

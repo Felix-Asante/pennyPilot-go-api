@@ -87,6 +87,16 @@ func (handler *authRoutesHandler) loginHandler(w http.ResponseWriter, r *http.Re
 func (handler *authRoutesHandler) resetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 }
-func (h *authRoutesHandler) requestResetPasswordCode(w http.ResponseWriter, r *http.Request) {
 
+func (h *authRoutesHandler) requestResetPasswordCode(w http.ResponseWriter, r *http.Request) {
+	var request authServices.LoginRequest
+
+	authServices := newAuthServices(h.db)
+
+	if err := customErrors.DecodeAndValidate(r, &request); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, err.Error(), nil)
+		return
+	}
+
+	authServices.ResetPasswordRequest(request.Email)
 }

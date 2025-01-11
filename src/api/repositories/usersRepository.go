@@ -14,6 +14,7 @@ type Users struct {
 	LastName  string     `gorm:"column:last_name"`
 	Email     string     `gorm:"column:email;unique"`
 	Password  string     `gorm:"column:password"`
+	Tokens    []Tokens   `gorm:"foreignKey:UserID"`
 	CreatedAt *time.Time `gorm:"column:created_at"`
 	UpdatedAt *time.Time `gorm:"column:updated_at"`
 }
@@ -32,6 +33,7 @@ type NewUserResponse struct {
 	Email     string     `json:"email"`
 	CreatedAt *time.Time `json:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at"`
+	Tokens    []Tokens   `json:"tokens" gorm:"foreignKey:ID"`
 }
 
 type UsersRepository struct {
