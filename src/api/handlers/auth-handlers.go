@@ -89,7 +89,7 @@ func (handler *authRoutesHandler) resetPasswordHandler(w http.ResponseWriter, r 
 }
 
 func (h *authRoutesHandler) requestResetPasswordCode(w http.ResponseWriter, r *http.Request) {
-	var request authServices.LoginRequest
+	var request authServices.ForgetPasswordRequest
 
 	authServices := newAuthServices(h.db)
 
@@ -98,5 +98,13 @@ func (h *authRoutesHandler) requestResetPasswordCode(w http.ResponseWriter, r *h
 		return
 	}
 
-	authServices.ResetPasswordRequest(request.Email)
+	token, err := authServices.ResetPasswordRequest(request.Email)
+
+	if err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, err.Error(), nil)
+		return
+	}
+
+	jsonResponse := map[string]interface{}{"code": token}
+	json.NewEncoder(w).Encode(jsonResponse)
 }

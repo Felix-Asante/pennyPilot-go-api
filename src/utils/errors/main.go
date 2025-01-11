@@ -22,16 +22,18 @@ type StandardError struct {
 var validate = validator.New()
 
 const (
-	InvalidRequestError        = "invalid request payload"
-	ValidationFailedError      = "validation failed"
-	UserDoesNotExist           = "user does not exist"
-	UserAlreadyExists          = "user already exists"
-	UserAlreadyExistsWithEmail = "email taken"
-	BadRequest                 = "bad request"
-	SomethingWentWrong         = "something went wrong"
-	InternalServerError        = "internal server error"
-	PasswordNotMatch           = "password does not match"
-	IncorrectPassword          = "incorrect password"
+	InvalidRequestError            = "invalid request payload"
+	ValidationFailedError          = "validation failed"
+	UserDoesNotExist               = "user does not exist"
+	UserAlreadyExists              = "user already exists"
+	UserAlreadyExistsWithEmail     = "email taken"
+	BadRequest                     = "bad request"
+	SomethingWentWrong             = "something went wrong"
+	InternalServerError            = "internal server error"
+	PasswordNotMatch               = "password does not match"
+	IncorrectPassword              = "incorrect password"
+	ResetTokenNotExpired           = "reset token not expired"
+	AlreadyRequestedResetCodeError = "already requested reset code"
 )
 
 func DecodeAndValidate(r *http.Request, dst interface{}) error {

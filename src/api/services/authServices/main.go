@@ -2,9 +2,11 @@ package authServices
 
 import (
 	"errors"
+	"time"
 
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/repositories"
 	"github.com/felix-Asante/pennyPilot-go-api/src/pkgs/security"
+	"github.com/felix-Asante/pennyPilot-go-api/src/utils"
 	customErrors "github.com/felix-Asante/pennyPilot-go-api/src/utils/errors"
 )
 
@@ -15,6 +17,9 @@ type AuthServices struct {
 type LoginRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=8"`
+}
+type ForgetPasswordRequest struct {
+	Email string `json:"email" validate:"required,email"`
 }
 type ResetPasswordRequest struct {
 	Email string `json:"email" validate:"required,email"`
@@ -81,5 +86,25 @@ func (s *AuthServices) ResetPasswordRequest(email string) (string, error) {
 		return "", errors.New(customErrors.UserDoesNotExist)
 	}
 
-	return "", nil
+	if user.ResetToken != "" && !hasTokenExpired(user.ResetTokenExpiry) {
+		return "", errors.New(customErrors.AlreadyRequestedResetCodeError)
+	}
+
+	tokenCode := utils.GenerateRandomString(4)
+
+	user.ResetToken = tokenCode
+	user.ResetTokenCreatedAt = time.Now()
+	user.ResetTokenExpiry = time.Now().Add(time.Minute * 15)
+
+	_, error := s.usersRepository.Save(user)
+
+	if error != nil {
+		return "", errors.New(customErrors.BadRequest)
+	}
+
+	return tokenCode, nil
+}
+
+func hasTokenExpired(tokenExpiry time.Time) bool {
+	return time.Now().After(tokenExpiry)
 }

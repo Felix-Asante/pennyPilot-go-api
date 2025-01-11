@@ -9,14 +9,16 @@ import (
 )
 
 type Users struct {
-	ID        uuid.UUID  `gorm:"type:uuid;primaryKey;default:uuid_generate_v4();column:id"`
-	FirstName string     `gorm:"column:first_name"`
-	LastName  string     `gorm:"column:last_name"`
-	Email     string     `gorm:"column:email;unique"`
-	Password  string     `gorm:"column:password"`
-	Tokens    []Tokens   `gorm:"foreignKey:UserID"`
-	CreatedAt *time.Time `gorm:"column:created_at"`
-	UpdatedAt *time.Time `gorm:"column:updated_at"`
+	ID                  uuid.UUID  `gorm:"type:uuid;primaryKey;default:uuid_generate_v4();column:id"`
+	FirstName           string     `gorm:"column:first_name"`
+	LastName            string     `gorm:"column:last_name"`
+	Email               string     `gorm:"column:email;unique"`
+	Password            string     `gorm:"column:password"`
+	ResetToken          string     `gorm:"column:reset_token"`
+	ResetTokenExpiry    time.Time  `gorm:"column:reset_token_expiry"`
+	ResetTokenCreatedAt time.Time  `gorm:"column:reset_token_created_at"`
+	CreatedAt           *time.Time `gorm:"column:created_at"`
+	UpdatedAt           *time.Time `gorm:"column:updated_at"`
 }
 
 type CreateUserRequest struct {
@@ -33,7 +35,6 @@ type NewUserResponse struct {
 	Email     string     `json:"email"`
 	CreatedAt *time.Time `json:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at"`
-	Tokens    []Tokens   `json:"tokens" gorm:"foreignKey:ID"`
 }
 
 type UsersRepository struct {
@@ -85,6 +86,13 @@ func (u *UsersRepository) FindUserById(id string) (*Users, error) {
 	error := u.db.Where("id = ?", id).Find(&existingUser).Error
 
 	return &existingUser, error
+}
+
+func (u *UsersRepository) Save(user *Users) (*Users, error) {
+
+	error := u.db.Save(user).Error
+
+	return user, error
 }
 
 func (u *Users) BeforeCreate(tx *gorm.DB) error {
