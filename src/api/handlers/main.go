@@ -16,7 +16,8 @@ type Handler interface {
 func (h *Handlers) SetupRoutes(db *gorm.DB) {
 	authHandler := NewAuthHandler(h, db)
 	usersHandler := NewUsersHandler(h, db)
-	handlers := []Handler{authHandler, usersHandler}
+	accountsHandler := NewAccountHandler(h, db)
+	handlers := []Handler{authHandler, usersHandler, accountsHandler}
 	createAllRoutes(handlers)
 }
 
