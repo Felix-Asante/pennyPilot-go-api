@@ -34,6 +34,8 @@ const (
 	IncorrectPassword              = "incorrect password"
 	ResetTokenNotExpired           = "reset token not expired"
 	AlreadyRequestedResetCodeError = "already requested reset code"
+	ResetTokenExpiredError         = "reset token expired"
+	ResetTokenNotFound             = "reset token not found"
 )
 
 func DecodeAndValidate(r *http.Request, dst interface{}) error {

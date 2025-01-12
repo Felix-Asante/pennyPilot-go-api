@@ -88,6 +88,14 @@ func (u *UsersRepository) FindUserById(id string) (*Users, error) {
 	return &existingUser, error
 }
 
+func (u *UsersRepository) FindUserByResetToken(token string) (*Users, error) {
+	var existingUser Users
+
+	error := u.db.Where("reset_token = ?", token).Find(&existingUser).Error
+
+	return &existingUser, error
+}
+
 func (u *UsersRepository) Save(user *Users) (*Users, error) {
 
 	error := u.db.Save(user).Error

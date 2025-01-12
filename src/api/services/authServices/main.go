@@ -25,6 +25,11 @@ type ResetPasswordRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }
 
+type ResetPassword struct {
+	NewPassword string `json:"new_password" validate:"required,min=8"`
+	Token       string `json:"token" validate:"required,min=4,max=4"`
+}
+
 func NewAuthServices(userRepository *repositories.UsersRepository) *AuthServices {
 	return &AuthServices{userRepository}
 }
@@ -103,6 +108,41 @@ func (s *AuthServices) ResetPasswordRequest(email string) (string, error) {
 	}
 
 	return tokenCode, nil
+}
+
+func (s *AuthServices) ResetPassword(body ResetPassword) error {
+	user, err := s.usersRepository.FindUserByResetToken(body.Token)
+
+	if err != nil {
+		return errors.New(customErrors.InternalServerError)
+	}
+
+	if user.ResetToken == "" {
+		return errors.New(customErrors.ResetTokenNotFound)
+	}
+
+	if hasTokenExpired(user.ResetTokenExpiry) {
+		return errors.New(customErrors.ResetTokenExpiredError)
+	}
+
+	hashedPassword, error := security.GetHashedPassword(body.NewPassword)
+
+	if error != nil {
+		return errors.New(customErrors.InternalServerError)
+	}
+
+	user.Password = hashedPassword
+	user.ResetToken = ""
+	user.ResetTokenExpiry = time.Time{}
+	user.ResetTokenCreatedAt = time.Time{}
+
+	_, error = s.usersRepository.Save(user)
+
+	if error != nil {
+		return errors.New(customErrors.InternalServerError)
+	}
+
+	return nil
 }
 
 func hasTokenExpired(tokenExpiry time.Time) bool {

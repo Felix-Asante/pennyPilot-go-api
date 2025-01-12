@@ -85,6 +85,25 @@ func (handler *authRoutesHandler) loginHandler(w http.ResponseWriter, r *http.Re
 }
 
 func (handler *authRoutesHandler) resetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	var request authServices.ResetPassword
+
+	authServices := newAuthServices(handler.db)
+
+	if err := customErrors.DecodeAndValidate(r, &request); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, err.Error(), nil)
+		return
+	}
+
+	err := authServices.ResetPassword(request)
+
+	if err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, err.Error(), nil)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	jsonResponse := map[string]interface{}{"success": "true"}
+	json.NewEncoder(w).Encode(jsonResponse)
 
 }
 
