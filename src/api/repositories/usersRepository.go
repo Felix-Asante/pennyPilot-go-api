@@ -19,6 +19,7 @@ type Users struct {
 	ResetTokenCreatedAt time.Time  `gorm:"column:reset_token_created_at"`
 	CreatedAt           *time.Time `gorm:"column:created_at"`
 	UpdatedAt           *time.Time `gorm:"column:updated_at"`
+	Accounts            []Accounts `gorm:"columns:accounts;foreignKey:UserID;references:ID"`
 }
 
 type CreateUserRequest struct {

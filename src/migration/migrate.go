@@ -9,7 +9,7 @@ import (
 
 func main() {
 	db := db.ConnectToDB()
-	error := db.AutoMigrate(&repositories.Users{})
+	error := db.AutoMigrate(&repositories.Users{}, &repositories.Accounts{})
 
 	if error != nil {
 		panic(error)
