@@ -36,6 +36,7 @@ const (
 	AlreadyRequestedResetCodeError = "already requested reset code"
 	ResetTokenExpiredError         = "reset token expired"
 	ResetTokenNotFound             = "reset token not found"
+	AccountAlreadyExistsError      = "account already exists"
 )
 
 func DecodeAndValidate(r *http.Request, dst interface{}) error {
