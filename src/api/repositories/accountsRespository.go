@@ -106,6 +106,14 @@ func (u *AccountsRepository) Remove(id string) (bool, error) {
 	return true, nil
 }
 
+func (u *AccountsRepository) FindAllByUserID(userId string) (*[]Accounts, error) {
+	var accounts []Accounts
+
+	error := u.db.Where("user_id=?", userId).Find(&accounts).Error
+
+	return &accounts, error
+}
+
 func NewAccountsRepository(db *gorm.DB) *AccountsRepository {
 
 	return &AccountsRepository{db}

@@ -84,3 +84,9 @@ func (s *AccountsServices) Remove(accountId string, user string) (int, error) {
 
 	return http.StatusOK, nil
 }
+
+func (s *AccountsServices) FindUserAccounts(userId string) (*[]repositories.Accounts, error) {
+	accounts, err := s.accountsRepository.FindAllByUserID(userId)
+
+	return accounts, err
+}

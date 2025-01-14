@@ -14,6 +14,8 @@ func NewUsersServices(userRepository *repositories.UsersRepository) *UsersServic
 	return &UsersServices{userRepository}
 }
 
+func (s *UsersServices) FindAccounts(id string) {}
+
 func (s *UsersServices) CreateNewUser(id string) {
 	fmt.Println("Find by id")
 }

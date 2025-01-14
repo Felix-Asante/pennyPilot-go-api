@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"github.com/felix-Asante/pennyPilot-go-api/src/pkgs/jwt"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth/v5"
 	"gorm.io/gorm"
 )
 
@@ -21,6 +23,8 @@ func (h *UsersHandler) SetupRoutes() {
 
 	router.Route("/users", func(route chi.Router) {
 
-		route.Get("/{usersId}", usersRoutesHandler.getUser)
+		route.Use(jwtauth.Verifier(jwt.InitAuthToken()))
+		route.Use(jwtauth.Authenticator(jwt.InitAuthToken()))
+		route.Get("/{userId}/accounts", usersRoutesHandler.getAccounts)
 	})
 }
