@@ -37,7 +37,16 @@ const (
 	ResetTokenExpiredError         = "reset token expired"
 	ResetTokenNotFound             = "reset token not found"
 	AccountAlreadyExistsError      = "account already exists"
+	ConflictError                  = "conflict"
+	NotFoundError                  = "not found"
 )
+
+var StatusCodes = map[int]string{
+	http.StatusBadRequest:          BadRequest,
+	http.StatusInternalServerError: InternalServerError,
+	http.StatusConflict:            ConflictError,
+	http.StatusNotFound:            NotFoundError,
+}
 
 func DecodeAndValidate(r *http.Request, dst interface{}) error {
 	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {

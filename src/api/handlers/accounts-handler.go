@@ -52,11 +52,11 @@ func (h *accountsRoutesHandler) new(w http.ResponseWriter, r *http.Request) {
 		AllocationPoint: request.AllocationPoint,
 	}
 
-	newAccount, err := accountServices.Create(account)
+	newAccount, statusCode, err := accountServices.Create(account)
 	jsonResponse, _ := json.Marshal(newAccount)
 
 	if err != nil {
-		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, err.Error(), nil)
+		customErrors.RespondWithError(w, statusCode, customErrors.StatusCodes[statusCode], err.Error(), nil)
 		return
 	}
 

@@ -2,6 +2,7 @@ package accountsServices
 
 import (
 	"errors"
+	"net/http"
 
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/repositories"
 	customErrors "github.com/felix-Asante/pennyPilot-go-api/src/utils/errors"
@@ -15,16 +16,17 @@ func NewAccountServices(accountsRepository *repositories.AccountsRepository) *Ac
 	return &AccountsServices{accountsRepository}
 }
 
-func (s *AccountsServices) Create(data repositories.CreateAccountDto) (*repositories.NewAccountResponse, error) {
+func (s *AccountsServices) Create(data repositories.CreateAccountDto) (*repositories.NewAccountResponse, int, error) {
 	account, err := s.accountsRepository.FindByNameAndUserID(data.Name, data.UserID)
 
 	if err != nil {
-		return nil, errors.New(customErrors.InternalServerError)
+		return nil, http.StatusInternalServerError, errors.New(customErrors.InternalServerError)
 	}
 
 	if account.Name != "" {
-		return nil, errors.New(customErrors.AccountAlreadyExistsError)
+		return nil, http.StatusConflict, errors.New(customErrors.AccountAlreadyExistsError)
 	}
 
-	return s.accountsRepository.Create(data)
+	newAccount, error := s.accountsRepository.Create(data)
+	return newAccount, http.StatusCreated, error
 }
