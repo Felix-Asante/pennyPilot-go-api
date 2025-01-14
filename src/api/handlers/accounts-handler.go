@@ -22,6 +22,9 @@ type createAccountRequest struct {
 	TargetBalance   float64 `json:"target_balance" validate:"required,min=0.00"`
 	AllocationPoint float64 `json:"allocation_point" validate:"required,min=1,max=100"`
 }
+type addBalanceRequest struct {
+	Amount float64 `json:"amount" validate:"required,min=1"`
+}
 
 func newAccountServices(db *gorm.DB) *accountsServices.AccountsServices {
 	newAccountRepository := repositories.NewAccountsRepository(db)
@@ -92,6 +95,45 @@ func (h *accountsRoutesHandler) get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResponse, _ := json.Marshal(account)
+	w.WriteHeader(statusCode)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
+
+}
+
+func (h *accountsRoutesHandler) updateBalance(w http.ResponseWriter, r *http.Request) {
+
+	accountId := chi.URLParam(r, "accountId")
+
+	if err := uuid.Validate(accountId); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, customErrors.InvalidAccountIDError, nil)
+		return
+	}
+	_, claims, error := jwtauth.FromContext(r.Context())
+
+	if error != nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+
+	var request addBalanceRequest
+
+	if err := customErrors.DecodeAndValidate(r, &request); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, err.Error(), nil)
+		return
+	}
+
+	accountsServices := newAccountServices(h.db)
+	updateAmount := request.Amount
+	userId := claims["id"].(string)
+
+	_, statusCode, err := accountsServices.UpdateBalance(accountId, updateAmount, userId)
+	if err != nil {
+		customErrors.RespondWithError(w, statusCode, customErrors.StatusCodes[statusCode], err.Error(), nil)
+		return
+	}
+
+	jsonResponse, _ := json.Marshal(map[string]interface{}{"success": true})
 	w.WriteHeader(statusCode)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)

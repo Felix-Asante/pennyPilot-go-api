@@ -27,9 +27,13 @@ func (h *AccountsHandler) SetupRoutes() {
 		route.Use(jwtauth.Authenticator(jwt.InitAuthToken()))
 
 		route.Post("/", accountRoutesHandler.new)
-		route.Get("/{accountId}", accountRoutesHandler.get)
-		route.Put("/{accountId}", accountRoutesHandler.update)
-		route.Delete("/{accountId}", accountRoutesHandler.delete)
+		route.Route("/{accountId}", func(r chi.Router) {
+			r.Get("/", accountRoutesHandler.get)
+			r.Put("/", accountRoutesHandler.update)
+			r.Delete("/", accountRoutesHandler.delete)
+			r.Put("/add-balance", accountRoutesHandler.updateBalance)
+		})
+
 		route.Post("/transfer", accountRoutesHandler.transfer)
 
 	})

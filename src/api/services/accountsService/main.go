@@ -2,6 +2,7 @@ package accountsServices
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/repositories"
@@ -31,7 +32,7 @@ func (s *AccountsServices) Create(data repositories.CreateAccountDto) (*reposito
 	return newAccount, http.StatusCreated, error
 }
 
-func (s *AccountsServices) Find(accountId string, userId string) (*repositories.NewAccountResponse, int, error) {
+func (s *AccountsServices) Find(accountId string, userId string) (*repositories.Accounts, int, error) {
 
 	account, err := s.accountsRepository.FindByIDAndUserID(accountId, userId)
 
@@ -40,8 +41,30 @@ func (s *AccountsServices) Find(accountId string, userId string) (*repositories.
 	}
 
 	if account.Name == "" {
-		return nil, http.StatusNotFound, errors.New(customErrors.NotFoundError)
+		message := fmt.Sprintf("Account %s", customErrors.NotFoundError)
+		return nil, http.StatusNotFound, errors.New(message)
 	}
 
 	return account, http.StatusOK, nil
+}
+
+func (s *AccountsServices) UpdateBalance(accountId string, amount float64, user string) (*repositories.Accounts, int, error) {
+	// Account belong to user
+	account, statusCode, error := s.Find(accountId, user)
+
+	if error != nil {
+		return account, statusCode, error
+	}
+
+	newCurrentBalance := account.CurrentBalance + amount
+
+	if newCurrentBalance > account.TargetBalance {
+		return nil, http.StatusBadRequest, errors.New("you have reached the limit of this account")
+	}
+
+	account.CurrentBalance = newCurrentBalance
+
+	account, error = s.accountsRepository.Save(account)
+
+	return account, statusCode, error
 }

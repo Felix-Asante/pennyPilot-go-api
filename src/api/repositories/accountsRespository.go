@@ -8,14 +8,14 @@ import (
 )
 
 type Accounts struct {
-	ID              uuid.UUID  `gorm:"type:uuid;primaryKey;default:uuid_generate_v4();column:id"`
-	UserID          string     `gorm:"column:user_id;not null"`
-	Name            string     `gorm:"column:name;not null;index"`
-	CurrentBalance  float64    `gorm:"column:current_balance;default:0"`
-	TargetBalance   float64    `gorm:"column:target_balance;not null"`
-	AllocationPoint float64    `gorm:"column:allocation_point;not null"`
-	CreatedAt       *time.Time `gorm:"column:created_at"`
-	UpdatedAt       *time.Time `gorm:"column:updated_at"`
+	ID              uuid.UUID  `gorm:"type:uuid;primaryKey;default:uuid_generate_v4();column:id" json:"id"`
+	UserID          string     `gorm:"column:user_id;not null" json:"-"`
+	Name            string     `gorm:"column:name;not null;index" json:"name"`
+	CurrentBalance  float64    `gorm:"column:current_balance;default:0" json:"current_balance"`
+	TargetBalance   float64    `gorm:"column:target_balance;not null" json:"target_balance"`
+	AllocationPoint float64    `gorm:"column:allocation_point;not null" json:"allocation_point"`
+	CreatedAt       *time.Time `gorm:"column:created_at" json:"created_at"`
+	UpdatedAt       *time.Time `gorm:"column:updated_at" json:"updated_at"`
 }
 
 type AccountsRepository struct {
@@ -76,7 +76,7 @@ func (u *AccountsRepository) FindByNameAndUserID(name string, userID string) (*A
 	return &existingAccount, error
 }
 
-func (u *AccountsRepository) FindByIDAndUserID(id string, userID string) (*NewAccountResponse, error) {
+func (u *AccountsRepository) FindByIDAndUserID(id string, userID string) (*Accounts, error) {
 
 	var existingAccount Accounts
 
@@ -85,18 +85,13 @@ func (u *AccountsRepository) FindByIDAndUserID(id string, userID string) (*NewAc
 	if error != nil {
 		return nil, error
 	}
+	return &existingAccount, error
+}
 
-	account := NewAccountResponse{
-		ID:              existingAccount.ID.String(),
-		Name:            existingAccount.Name,
-		CurrentBalance:  existingAccount.CurrentBalance,
-		TargetBalance:   existingAccount.TargetBalance,
-		AllocationPoint: existingAccount.AllocationPoint,
-		CreatedAt:       existingAccount.CreatedAt,
-		UpdatedAt:       existingAccount.UpdatedAt,
-	}
+func (u *AccountsRepository) Save(account *Accounts) (*Accounts, error) {
+	error := u.db.Save(account).Error
 
-	return &account, error
+	return account, error
 }
 
 func NewAccountsRepository(db *gorm.DB) *AccountsRepository {
