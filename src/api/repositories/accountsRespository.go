@@ -94,6 +94,18 @@ func (u *AccountsRepository) Save(account *Accounts) (*Accounts, error) {
 	return account, error
 }
 
+func (u *AccountsRepository) Remove(id string) (bool, error) {
+	var accounts Accounts
+
+	error := u.db.Where("id", id).Delete(&accounts).Error
+
+	if error != nil {
+		return false, error
+	}
+
+	return true, nil
+}
+
 func NewAccountsRepository(db *gorm.DB) *AccountsRepository {
 
 	return &AccountsRepository{db}

@@ -68,3 +68,19 @@ func (s *AccountsServices) UpdateBalance(accountId string, amount float64, user 
 
 	return account, statusCode, error
 }
+
+func (s *AccountsServices) Remove(accountId string, user string) (int, error) {
+	_, statusCode, error := s.Find(accountId, user)
+
+	if error != nil {
+		return statusCode, error
+	}
+
+	_, err := s.accountsRepository.Remove(accountId)
+
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusOK, nil
+}

@@ -145,6 +145,32 @@ func (h *accountsRoutesHandler) update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *accountsRoutesHandler) delete(w http.ResponseWriter, r *http.Request) {
+	accountId := chi.URLParam(r, "accountId")
+
+	if err := uuid.Validate(accountId); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, customErrors.InvalidAccountIDError, nil)
+		return
+	}
+	_, claims, error := jwtauth.FromContext(r.Context())
+
+	if error != nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+
+	accountsServices := newAccountServices(h.db)
+	userId := claims["id"].(string)
+	statusCode, error := accountsServices.Remove(accountId, userId)
+
+	if error != nil {
+		customErrors.RespondWithError(w, statusCode, customErrors.StatusCodes[statusCode], error.Error(), nil)
+		return
+	}
+
+	jsonResponse, _ := json.Marshal(map[string]interface{}{"success": true})
+	w.WriteHeader(statusCode)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
 
 }
 
