@@ -39,6 +39,7 @@ const (
 	AccountAlreadyExistsError      = "account already exists"
 	ConflictError                  = "conflict"
 	NotFoundError                  = "not found"
+	InvalidAccountIDError          = "invalid account id"
 )
 
 var StatusCodes = map[int]string{

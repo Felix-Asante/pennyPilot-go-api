@@ -76,6 +76,29 @@ func (u *AccountsRepository) FindByNameAndUserID(name string, userID string) (*A
 	return &existingAccount, error
 }
 
+func (u *AccountsRepository) FindByIDAndUserID(id string, userID string) (*NewAccountResponse, error) {
+
+	var existingAccount Accounts
+
+	error := u.db.Where("id = ? AND user_id = ?", id, userID).Find(&existingAccount).Error
+
+	if error != nil {
+		return nil, error
+	}
+
+	account := NewAccountResponse{
+		ID:              existingAccount.ID.String(),
+		Name:            existingAccount.Name,
+		CurrentBalance:  existingAccount.CurrentBalance,
+		TargetBalance:   existingAccount.TargetBalance,
+		AllocationPoint: existingAccount.AllocationPoint,
+		CreatedAt:       existingAccount.CreatedAt,
+		UpdatedAt:       existingAccount.UpdatedAt,
+	}
+
+	return &account, error
+}
+
 func NewAccountsRepository(db *gorm.DB) *AccountsRepository {
 
 	return &AccountsRepository{db}

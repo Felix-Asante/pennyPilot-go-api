@@ -7,7 +7,9 @@ import (
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/repositories"
 	accountsServices "github.com/felix-Asante/pennyPilot-go-api/src/api/services/accountsService"
 	customErrors "github.com/felix-Asante/pennyPilot-go-api/src/utils/errors"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -66,6 +68,33 @@ func (h *accountsRoutesHandler) new(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *accountsRoutesHandler) get(w http.ResponseWriter, r *http.Request) {
+
+	accountId := chi.URLParam(r, "accountId")
+
+	if err := uuid.Validate(accountId); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, customErrors.InvalidAccountIDError, nil)
+		return
+	}
+
+	_, claims, error := jwtauth.FromContext(r.Context())
+
+	if error != nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+
+	accountsServices := newAccountServices(h.db)
+	account, statusCode, err := accountsServices.Find(accountId, claims["id"].(string))
+
+	if err != nil {
+		customErrors.RespondWithError(w, statusCode, customErrors.StatusCodes[statusCode], err.Error(), nil)
+		return
+	}
+
+	jsonResponse, _ := json.Marshal(account)
+	w.WriteHeader(statusCode)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
 
 }
 
