@@ -50,12 +50,13 @@ func (s *AuthServices) Login(email string, password string) (*repositories.NewUs
 	}
 
 	userResponse := &repositories.NewUserResponse{
-		ID:        user.ID.String(),
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		ID:           user.ID.String(),
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
+		Email:        user.Email,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
+		MembershipId: user.MembershipId,
 	}
 	return userResponse, nil
 }
