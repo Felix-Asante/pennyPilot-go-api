@@ -1,9 +1,11 @@
 package repositories
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/felix-Asante/pennyPilot-go-api/src/pkgs/security"
+	"github.com/felix-Asante/pennyPilot-go-api/src/utils"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -20,6 +22,7 @@ type Users struct {
 	CreatedAt           *time.Time `gorm:"column:created_at"`
 	UpdatedAt           *time.Time `gorm:"column:updated_at"`
 	Accounts            []Accounts `gorm:"columns:accounts;foreignKey:UserID;references:ID"`
+	MembershipId        string     `gorm:"columns:membership_id;not null"`
 }
 
 type CreateUserRequest struct {
@@ -30,12 +33,13 @@ type CreateUserRequest struct {
 }
 
 type NewUserResponse struct {
-	ID        string     `json:"id"`
-	FirstName string     `json:"first_name"`
-	LastName  string     `json:"last_name"`
-	Email     string     `json:"email"`
-	CreatedAt *time.Time `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at"`
+	ID           string     `json:"id"`
+	FirstName    string     `json:"first_name"`
+	LastName     string     `json:"last_name"`
+	Email        string     `json:"email"`
+	CreatedAt    *time.Time `json:"created_at"`
+	UpdatedAt    *time.Time `json:"updated_at"`
+	MembershipId string     `json:"membership_id"`
 }
 
 type UsersRepository struct {
@@ -70,12 +74,13 @@ func (u *UsersRepository) CreateUser(data CreateUserRequest) (*NewUserResponse, 
 	error := u.db.Create(&user).Error
 
 	newUser := NewUserResponse{
-		ID:        user.ID.String(),
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		ID:           user.ID.String(),
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
+		Email:        user.Email,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
+		MembershipId: user.MembershipId,
 	}
 
 	return &newUser, error
@@ -112,5 +117,6 @@ func (u *Users) BeforeCreate(tx *gorm.DB) error {
 		return error
 	}
 	u.Password = password
+	u.MembershipId = fmt.Sprintf("P%s", utils.GenerateRandomString(7))
 	return nil
 }
