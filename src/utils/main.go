@@ -13,3 +13,12 @@ func GenerateRandomString(length int) string {
 	}
 	return string(b)
 }
+
+type IncomeType string
+
+const (
+	Salary     IncomeType = "salary"
+	Investment IncomeType = "investment"
+	Freelance  IncomeType = "freelance"
+	Others     IncomeType = "others"
+)
