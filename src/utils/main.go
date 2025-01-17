@@ -15,10 +15,18 @@ func GenerateRandomString(length int) string {
 }
 
 type IncomeType string
+type IncomeFrequency string
 
 const (
 	Salary     IncomeType = "salary"
 	Investment IncomeType = "investment"
 	Freelance  IncomeType = "freelance"
 	Others     IncomeType = "others"
+)
+const (
+	Weekly   IncomeFrequency = "weekly"
+	Monthly  IncomeFrequency = "monthly"
+	Yearly   IncomeFrequency = "yearly"
+	BiWeekly IncomeFrequency = "bi-weekly"
+	OneTime  IncomeFrequency = "one-time"
 )
