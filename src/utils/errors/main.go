@@ -2,6 +2,7 @@ package customErrors
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -51,10 +52,12 @@ var StatusCodes = map[int]string{
 
 func DecodeAndValidate(r *http.Request, dst interface{}) error {
 	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
+		fmt.Printf("\nValidation error %v\n", err)
 		return &ValidationError{Message: InvalidRequestError}
 	}
 
 	if err := validate.Struct(dst); err != nil {
+		fmt.Printf("\nValidation error %v\n", err)
 		return &ValidationError{Message: ValidationFailedError, Err: err}
 	}
 

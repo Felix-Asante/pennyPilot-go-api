@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type IncomeType string
@@ -66,4 +67,32 @@ func (a IncomeFrequency) Value() (driver.Value, error) {
 
 func (u *Incomes) TableName() string {
 	return "incomes"
+}
+
+type IncomeRepository struct {
+	db *gorm.DB
+}
+
+func NewIncomeRepository(db *gorm.DB) *IncomeRepository {
+
+	return &IncomeRepository{db}
+}
+
+func (repo *IncomeRepository) Create(data CreateIncomeDto) (*Incomes, error) {
+	newIncome := Incomes{
+		UserId:       data.User,
+		Type:         IncomeType(data.Type),
+		Frequency:    IncomeFrequency(data.Frequency),
+		DateReceived: data.DateReceived,
+		Amount:       data.Amount,
+	}
+	error := repo.db.Create(&newIncome).Error
+
+	return &newIncome, error
+}
+
+func (u *Incomes) BeforeCreate(tx *gorm.DB) error {
+
+	u.ID = uuid.New()
+	return nil
 }

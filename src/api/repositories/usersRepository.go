@@ -23,6 +23,7 @@ type Users struct {
 	UpdatedAt           *time.Time `gorm:"column:updated_at"`
 	Accounts            []Accounts `gorm:"columns:accounts;foreignKey:UserID;references:ID"`
 	MembershipId        string     `gorm:"columns:membership_id;not null"`
+	TotalIncome         float64    `gorm:"column:total_income;default:0"`
 
 	Incomes []Incomes `gorm:"columns:incomes;foreignKey:user_id;reference:id"`
 }
