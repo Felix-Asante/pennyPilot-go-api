@@ -9,7 +9,9 @@ import (
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/repositories"
 	incomeservices "github.com/felix-Asante/pennyPilot-go-api/src/api/services/incomeServices"
 	customErrors "github.com/felix-Asante/pennyPilot-go-api/src/utils/errors"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -63,6 +65,73 @@ func (h *incomeRoutesHandler) create(w http.ResponseWriter, r *http.Request) {
 
 	jsonResponse, _ := json.Marshal(newIncome)
 	w.WriteHeader(status)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
+}
+
+func (h *incomeRoutesHandler) update(w http.ResponseWriter, r *http.Request) {
+	var request repositories.UpdateIncomeDto
+	_, claims, error := jwtauth.FromContext(r.Context())
+	incomeId := chi.URLParam(r, "incomeId")
+
+	if err := uuid.Validate(incomeId); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, customErrors.InvalidAccountIDError, nil)
+		return
+	}
+
+	if error != nil {
+		fmt.Print(error)
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+
+	if err := customErrors.DecodeAndValidate(r, &request); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, err.Error(), nil)
+		return
+	}
+
+	incomeService := newIncomeServices(h.db)
+
+	newIncome, status, error := incomeService.Update(incomeId, claims["id"].(string), request)
+
+	if error != nil {
+		customErrors.RespondWithError(w, status, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+
+	jsonResponse, _ := json.Marshal(newIncome)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
+}
+
+func (h *incomeRoutesHandler) get(w http.ResponseWriter, r *http.Request) {
+
+	_, claims, error := jwtauth.FromContext(r.Context())
+	incomeId := chi.URLParam(r, "incomeId")
+
+	if err := uuid.Validate(incomeId); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, customErrors.InvalidAccountIDError, nil)
+		return
+	}
+
+	if error != nil {
+		fmt.Print(error)
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+
+	incomeService := newIncomeServices(h.db)
+
+	newIncome, status, error := incomeService.Get(incomeId, claims["id"].(string))
+
+	if error != nil {
+		customErrors.RespondWithError(w, status, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+
+	jsonResponse, _ := json.Marshal(newIncome)
+	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)
 }

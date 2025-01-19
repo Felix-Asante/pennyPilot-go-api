@@ -91,6 +91,24 @@ func (repo *IncomeRepository) Create(data CreateIncomeDto) (*Incomes, error) {
 	return &newIncome, error
 }
 
+func (u *IncomeRepository) FindByIDAndUserID(id string, userID string) (*Incomes, error) {
+
+	var existingIncome Incomes
+
+	error := u.db.Where("id = ? AND user_id = ?", id, userID).Find(&existingIncome).Error
+
+	if error != nil {
+		return nil, error
+	}
+	return &existingIncome, error
+}
+
+func (u *IncomeRepository) Save(income *Incomes) (*Incomes, error) {
+	error := u.db.Save(income).Error
+
+	return income, error
+}
+
 func (u *Incomes) BeforeCreate(tx *gorm.DB) error {
 
 	u.ID = uuid.New()

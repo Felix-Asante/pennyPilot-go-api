@@ -41,6 +41,7 @@ const (
 	ConflictError                  = "conflict"
 	NotFoundError                  = "not found"
 	InvalidAccountIDError          = "invalid account id"
+	ForbiddenError                 = "forbidden error"
 )
 
 var StatusCodes = map[int]string{

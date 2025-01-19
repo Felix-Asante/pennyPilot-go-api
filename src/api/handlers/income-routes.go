@@ -26,6 +26,8 @@ func (h *IncomeHandler) SetupRoutes() {
 		route.Use(jwtauth.Authenticator(jwt.InitAuthToken()))
 
 		route.Post("/", incomeRoutesHandler.create)
+		route.Put("/{incomeId}", incomeRoutesHandler.update)
+		route.Get("/{incomeId}", incomeRoutesHandler.get)
 
 	})
 
