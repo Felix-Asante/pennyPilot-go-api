@@ -24,6 +24,7 @@ type Users struct {
 	Accounts            []Accounts `gorm:"columns:accounts;foreignKey:UserID;references:ID"`
 	MembershipId        string     `gorm:"columns:membership_id;not null"`
 	TotalIncome         float64    `gorm:"column:total_income;default:0"`
+	TotalAllocation     float64    `gorm:"column:total_allocation;default:0"`
 
 	Incomes []Incomes `gorm:"columns:incomes;foreignKey:user_id;reference:id"`
 }

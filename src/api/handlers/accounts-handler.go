@@ -27,9 +27,7 @@ type addBalanceRequest struct {
 }
 
 func newAccountServices(db *gorm.DB) *accountsServices.AccountsServices {
-	newAccountRepository := repositories.NewAccountsRepository(db)
-
-	accountServices := accountsServices.NewAccountServices(newAccountRepository)
+	accountServices := accountsServices.NewAccountServices(db)
 	return accountServices
 }
 
@@ -49,22 +47,23 @@ func (h *accountsRoutesHandler) new(w http.ResponseWriter, r *http.Request) {
 	}
 
 	accountServices := newAccountServices(h.db)
+	userId := claims["id"].(string)
 
 	account := repositories.CreateAccountDto{
-		UserID:          claims["id"].(string),
+		UserID:          userId,
 		Name:            request.Name,
 		TargetBalance:   request.TargetBalance,
 		AllocationPoint: request.AllocationPoint,
 	}
 
 	newAccount, statusCode, err := accountServices.Create(account)
-	jsonResponse, _ := json.Marshal(newAccount)
 
 	if err != nil {
 		customErrors.RespondWithError(w, statusCode, customErrors.StatusCodes[statusCode], err.Error(), nil)
 		return
 	}
 
+	jsonResponse, _ := json.Marshal(newAccount)
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/felix-Asante/pennyPilot-go-api/src/api/repositories"
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/services/usersServices"
 	customErrors "github.com/felix-Asante/pennyPilot-go-api/src/utils/errors"
 	"github.com/go-chi/jwtauth/v5"
@@ -16,9 +15,7 @@ type usersRoutesHandler struct {
 }
 
 func newUserServices(db *gorm.DB) *usersServices.UsersServices {
-	newUserRepository := repositories.NewUsersRepository(db)
-
-	usersServices := usersServices.NewUsersServices(newUserRepository)
+	usersServices := usersServices.NewUsersServices(db)
 	return usersServices
 }
 
