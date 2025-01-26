@@ -20,10 +20,13 @@ type incomeRoutesHandler struct {
 }
 
 type createIncomeRequest struct {
-	Amount       float64    `json:"amount" validate:"required,min=1"`
+	Amount       float64    `json:"amount" validate:"uuid,required,min=1"`
 	DateReceived *time.Time `json:"date_received" validate:"required"`
 	IncomeType   string     `json:"type" validate:"required"`
 	Frequency    string     `json:"frequency" validate:"required"`
+}
+type createAllocationRequest struct {
+	Accounts []string `json:"accounts" validate:"required"`
 }
 
 func newIncomeServices(db *gorm.DB) *incomeservices.IncomeServices {
@@ -131,6 +134,40 @@ func (h *incomeRoutesHandler) get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResponse, _ := json.Marshal(newIncome)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
+}
+
+func (h *incomeRoutesHandler) allocate(w http.ResponseWriter, r *http.Request) {
+	_, claims, error := jwtauth.FromContext(r.Context())
+
+	if error != nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+
+	var request createAllocationRequest
+	if err := customErrors.DecodeAndValidate(r, &request); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, err.Error(), nil)
+		return
+	}
+
+	if err := customErrors.ValidateUUIDs(request.Accounts); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, err.Error(), nil)
+		return
+	}
+
+	userId := claims["id"].(string)
+
+	incomeService := newIncomeServices(h.db)
+
+	if status, error := incomeService.AllocateIncomeToAccounts(userId, request.Accounts); error != nil {
+		customErrors.RespondWithError(w, status, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+
+	jsonResponse, _ := json.Marshal(map[string]interface{}{"success": true})
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)

@@ -37,13 +37,15 @@ type CreateUserRequest struct {
 }
 
 type NewUserResponse struct {
-	ID           string     `json:"id"`
-	FirstName    string     `json:"first_name"`
-	LastName     string     `json:"last_name"`
-	Email        string     `json:"email"`
-	CreatedAt    *time.Time `json:"created_at"`
-	UpdatedAt    *time.Time `json:"updated_at"`
-	MembershipId string     `json:"membership_id"`
+	ID              string     `json:"id"`
+	FirstName       string     `json:"first_name"`
+	LastName        string     `json:"last_name"`
+	Email           string     `json:"email"`
+	CreatedAt       *time.Time `json:"created_at"`
+	UpdatedAt       *time.Time `json:"updated_at"`
+	MembershipId    string     `json:"membership_id"`
+	TotalIncome     float64    `json:"total_income"`
+	TotalAllocation float64    `json:"total_allocation"`
 }
 
 type UsersRepository struct {
@@ -78,13 +80,15 @@ func (u *UsersRepository) CreateUser(data CreateUserRequest) (*NewUserResponse, 
 	error := u.db.Create(&user).Error
 
 	newUser := NewUserResponse{
-		ID:           user.ID.String(),
-		FirstName:    user.FirstName,
-		LastName:     user.LastName,
-		Email:        user.Email,
-		CreatedAt:    user.CreatedAt,
-		UpdatedAt:    user.UpdatedAt,
-		MembershipId: user.MembershipId,
+		ID:              user.ID.String(),
+		FirstName:       user.FirstName,
+		LastName:        user.LastName,
+		Email:           user.Email,
+		CreatedAt:       user.CreatedAt,
+		UpdatedAt:       user.UpdatedAt,
+		MembershipId:    user.MembershipId,
+		TotalIncome:     user.TotalIncome,
+		TotalAllocation: user.TotalAllocation,
 	}
 
 	return &newUser, error

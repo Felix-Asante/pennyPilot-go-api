@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type ValidationError struct {
@@ -80,4 +81,13 @@ func RespondWithError(w http.ResponseWriter, status int, errCode, message string
 		Message: message,
 		Details: details,
 	})
+}
+
+func ValidateUUIDs(uuids []string) error {
+	for _, id := range uuids {
+		if _, err := uuid.Parse(id); err != nil {
+			return fmt.Errorf("invalid UUID: %s", id)
+		}
+	}
+	return nil
 }

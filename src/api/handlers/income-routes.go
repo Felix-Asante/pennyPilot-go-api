@@ -28,6 +28,7 @@ func (h *IncomeHandler) SetupRoutes() {
 		route.Post("/", incomeRoutesHandler.create)
 		route.Put("/{incomeId}", incomeRoutesHandler.update)
 		route.Get("/{incomeId}", incomeRoutesHandler.get)
+		route.Put("/allocate", incomeRoutesHandler.allocate)
 
 	})
 

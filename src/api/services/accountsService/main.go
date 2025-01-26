@@ -124,3 +124,6 @@ func (s *AccountsServices) FindUserAccounts(userId string) (*[]repositories.Acco
 
 	return accounts, err
 }
+func (s *AccountsServices) SaveAccounts(account *repositories.Accounts) (*repositories.Accounts, error) {
+	return s.accountsRepository.Save(account)
+}
