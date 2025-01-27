@@ -55,6 +55,14 @@ func (repo *GoalsRepository) Create(data CreateNewGoalData) (*Goals, error) {
 	return &newGoals, error
 }
 
+func (repo *GoalsRepository) FindAccountTotalAllocation(accountId string) (float64, error) {
+	var totalAllocation float64
+
+	error := repo.db.Model(&Goals{}).Where("account_id = ?", accountId).Select("SUM(allocation_point)").Scan(&totalAllocation).Error
+
+	return totalAllocation, error
+}
+
 func (u *Goals) BeforeCreate(tx *gorm.DB) error {
 
 	u.ID = uuid.New()

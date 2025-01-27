@@ -24,6 +24,9 @@ func NewGoalsService(db *gorm.DB) *GoalsService {
 func (gs *GoalsService) Create(userId string, data repositories.CreateGoalDto) (Goal, int, error) {
 	accountRepo := repositories.NewAccountsRepository(gs.DB)
 	existingAccount, err := accountRepo.FindByIDAndUserID(data.Account, userId)
+	total, _ := gs.GoalsRepository.FindAccountTotalAllocation(data.Account)
+
+	fmt.Print(total)
 
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.New("an error occured while fetching account")
