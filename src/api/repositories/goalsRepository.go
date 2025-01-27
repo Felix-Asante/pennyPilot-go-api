@@ -8,15 +8,15 @@ import (
 )
 
 type Goals struct {
-	ID              uuid.UUID  `gorm:"type:uuid;primaryKey;default:uuid_generate_v4();column:id"`
-	Name            string     `gorm:"column:name;not null"`
-	TargetAmount    float64    `gorm:"column:target_amount;not null"`
-	CurrentBalance  float64    `gorm:"column:current_balance;not null"`
-	AllocationPoint float64    `gorm:"column:allocation_point;not null"`
-	DueDate         *time.Time `gorm:"column:due_date;not null"`
-	CreatedAt       *time.Time `gorm:"column:created_at"`
-	UpdatedAt       *time.Time `gorm:"column:updated_at"`
-	AccountId       string     `gorm:"column:account_id;not null"`
+	ID              uuid.UUID  `gorm:"type:uuid;primaryKey;default:uuid_generate_v4();column:id" json:"id"`
+	Name            string     `gorm:"column:name;not null" json:"name"`
+	TargetAmount    float64    `gorm:"column:target_amount;not null" json:"target_amount"`
+	CurrentBalance  float64    `gorm:"column:current_balance;not null" json:"current_balance"`
+	AllocationPoint float64    `gorm:"column:allocation_point;not null" json:"allocation_point"`
+	DueDate         *time.Time `gorm:"column:due_date;not null" json:"due_date"`
+	CreatedAt       *time.Time `gorm:"column:created_at" json:"created_at"`
+	UpdatedAt       *time.Time `gorm:"column:updated_at" json:"updated_at"`
+	AccountId       string     `gorm:"column:account_id;not null" json:"account_id"`
 }
 
 type GoalsRepository struct {

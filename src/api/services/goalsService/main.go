@@ -29,7 +29,7 @@ func (gs *GoalsService) Create(userId string, data repositories.CreateGoalDto) (
 		return nil, http.StatusInternalServerError, errors.New("an error occured while fetching account")
 	}
 
-	if existingAccount.Name == "" && existingAccount == nil {
+	if existingAccount.Name == "" {
 		return nil, http.StatusNotFound, errors.New(fmt.Sprintf("account %s", customErrors.NotFoundError))
 	}
 
