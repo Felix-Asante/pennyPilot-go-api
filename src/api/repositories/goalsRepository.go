@@ -63,6 +63,26 @@ func (repo *GoalsRepository) FindAccountTotalAllocation(accountId string) (float
 	return totalAllocation, error
 }
 
+func (repo *GoalsRepository) FindByID(id string) (*Goals, error) {
+	var goal Goals
+	error := repo.db.Where("id = ?", id).Find(&goal).Error
+
+	return &goal, error
+}
+
+func (repo *GoalsRepository) Remove(id string) (bool, error) {
+	var goals Goals
+	error := repo.db.Where("id = ?", id).Delete(&goals).Error
+
+	return error == nil, error
+}
+
+func (repo *GoalsRepository) Save(goal *Goals) (*Goals, error) {
+	error := repo.db.Save(goal).Error
+
+	return goal, error
+}
+
 func (u *Goals) BeforeCreate(tx *gorm.DB) error {
 
 	u.ID = uuid.New()

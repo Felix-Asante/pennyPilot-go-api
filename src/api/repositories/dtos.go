@@ -24,3 +24,10 @@ type CreateGoalDto struct {
 	DueDate         *time.Time `json:"due_date" validate:"required"`
 	Account         string     `json:"account_id" validate:"required"`
 }
+type UpdateGoalDto struct {
+	Name            string     `json:"name" validate:"omitempty,min=2"`
+	TargetAmount    float64    `json:"target_amount" validate:"omitempty,gt=0"`
+	AllocationPoint float64    `json:"allocation_point" validate:"omitempty,min=1,max=100"`
+	DueDate         *time.Time `json:"due_date" validate:"omitempty"`
+	Account         string     `json:"account_id" validate:"omitempty"`
+}

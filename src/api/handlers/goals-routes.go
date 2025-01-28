@@ -26,6 +26,9 @@ func (h *GoalsHandler) SetupRoutes() {
 		route.Use(jwtauth.Authenticator(jwt.InitAuthToken()))
 
 		route.Post("/", goalsRoutesHandler.create)
+		route.Put("/{goalId}", goalsRoutesHandler.update)
+		route.Delete("/{goalId}", goalsRoutesHandler.delete)
+		route.Get("/{goalId}", goalsRoutesHandler.get)
 
 	})
 

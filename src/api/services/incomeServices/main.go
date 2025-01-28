@@ -30,7 +30,7 @@ func (s *IncomeServices) Create(data repositories.CreateIncomeDto) (*repositorie
 			tx.Rollback()
 		}
 	}()
-	fmt.Printf("Payload %v", data)
+
 	income, err := s.incomesRepository.Create(data)
 
 	if err != nil {
