@@ -26,6 +26,10 @@ type addBalanceRequest struct {
 	Amount float64 `json:"amount" validate:"required,min=1"`
 }
 
+type allocateGoalsRequest struct {
+	Goals []string `json:"goals" validate:"required"`
+}
+
 func newAccountServices(db *gorm.DB) *accountsServices.AccountsServices {
 	accountServices := accountsServices.NewAccountServices(db)
 	return accountServices
@@ -171,6 +175,47 @@ func (h *accountsRoutesHandler) delete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)
 
+}
+
+func (h *accountsRoutesHandler) allocate(w http.ResponseWriter, r *http.Request) {
+	accountId := chi.URLParam(r, "accountId")
+
+	if err := uuid.Validate(accountId); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, customErrors.InvalidAccountIDError, nil)
+		return
+	}
+
+	_, claims, error := jwtauth.FromContext(r.Context())
+
+	if error != nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+
+	var request allocateGoalsRequest
+	if err := customErrors.DecodeAndValidate(r, &request); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, err.Error(), nil)
+		return
+	}
+
+	if err := customErrors.ValidateUUIDs(request.Goals); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, err.Error(), nil)
+		return
+	}
+
+	userId := claims["id"].(string)
+
+	accountService := newAccountServices(h.db)
+
+	if status, error := accountService.AllocateToGoals(accountId, userId, request.Goals); error != nil {
+		customErrors.RespondWithError(w, status, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+
+	jsonResponse, _ := json.Marshal(map[string]interface{}{"success": true})
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
 }
 
 func (h *accountsRoutesHandler) transfer(w http.ResponseWriter, r *http.Request) {

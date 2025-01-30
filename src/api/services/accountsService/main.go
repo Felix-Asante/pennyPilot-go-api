@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/repositories"
+	goalsservice "github.com/felix-Asante/pennyPilot-go-api/src/api/services/goalsService"
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/services/usersServices"
 	customErrors "github.com/felix-Asante/pennyPilot-go-api/src/utils/errors"
 	"gorm.io/gorm"
@@ -126,4 +128,86 @@ func (s *AccountsServices) FindUserAccounts(userId string) (*[]repositories.Acco
 }
 func (s *AccountsServices) SaveAccounts(account *repositories.Accounts) (*repositories.Accounts, error) {
 	return s.accountsRepository.Save(account)
+}
+
+func (s *AccountsServices) AllocateToGoals(accountId string, userId string, goals []string) (int, error) {
+	if len(goals) == 0 {
+		return http.StatusBadRequest, errors.New("choose goals to be allocated")
+	}
+
+	tx := s.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	var wg sync.WaitGroup
+	errCh := make(chan error, len(goals))
+
+	for _, goal := range goals {
+		wg.Add(1)
+		go func(goal string) {
+			defer wg.Done()
+			if err := s.AllocateToGoal(tx, accountId, userId, goal); err != nil {
+				errCh <- err
+			}
+		}(goal)
+	}
+
+	wg.Wait()
+	close(errCh)
+
+	for err := range errCh {
+		tx.Rollback()
+		if appErr, ok := err.(*customErrors.AppError); ok {
+			return appErr.StatusCode, appErr
+		}
+		return http.StatusInternalServerError, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return http.StatusInternalServerError, errors.New(customErrors.InternalServerError)
+	}
+
+	return http.StatusOK, nil
+}
+
+func (s *AccountsServices) AllocateToGoal(tx *gorm.DB, accountId string, userId string, goalId string) error {
+	account, status, err := s.Find(accountId, userId)
+	if err != nil {
+		return customErrors.NewAppError(status, customErrors.InternalServerError)
+	}
+
+	if account.Name == "" {
+		return customErrors.NewAppError(http.StatusNotFound, fmt.Sprintf("account %s", customErrors.NotFoundError))
+	}
+
+	goalsService := goalsservice.NewGoalsService(tx)
+	goal, status, err := goalsService.Get(goalId, userId)
+	if err != nil {
+		return customErrors.NewAppError(status, customErrors.InternalServerError)
+	}
+
+	if goal.Name == "" {
+		return customErrors.NewAppError(http.StatusNotFound, fmt.Sprintf("goal %s", customErrors.NotFoundError))
+	}
+
+	if account.CurrentBalance <= 0 {
+		return customErrors.NewAppError(http.StatusBadRequest, "insufficient income")
+	}
+
+	amountToAllocate := (goal.AllocationPoint / 100) * account.CurrentBalance
+	goal.CurrentBalance += amountToAllocate
+	account.CurrentBalance -= amountToAllocate
+	account.TotalAllocation += amountToAllocate
+
+	if err := tx.Save(account).Error; err != nil {
+		return customErrors.NewAppError(http.StatusInternalServerError, customErrors.InternalServerError)
+	}
+	if err := tx.Save(goal).Error; err != nil {
+		return customErrors.NewAppError(http.StatusInternalServerError, customErrors.InternalServerError)
+	}
+
+	return nil
 }

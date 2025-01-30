@@ -32,6 +32,7 @@ func (h *AccountsHandler) SetupRoutes() {
 			r.Put("/", accountRoutesHandler.update)
 			r.Delete("/", accountRoutesHandler.delete)
 			r.Put("/add-balance", accountRoutesHandler.updateBalance)
+			r.Put("/allocate", accountRoutesHandler.allocate)
 		})
 
 		route.Post("/transfer", accountRoutesHandler.transfer)

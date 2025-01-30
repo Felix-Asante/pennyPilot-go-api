@@ -16,6 +16,7 @@ type Accounts struct {
 	AllocationPoint float64    `gorm:"column:allocation_point;not null" json:"allocation_point"`
 	CreatedAt       *time.Time `gorm:"column:created_at" json:"created_at"`
 	UpdatedAt       *time.Time `gorm:"column:updated_at" json:"updated_at"`
+	TotalAllocation float64    `gorm:"column:total_allocation;default:0"`
 
 	Goals []Goals `gorm:"columns:goals;foreignKey:account_id;reference:id"`
 }

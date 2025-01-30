@@ -192,3 +192,7 @@ func updateField(condition bool, updateFunc func()) {
 		updateFunc()
 	}
 }
+
+func (gs *GoalsService) SaveGoal(goal *repositories.Goals) (*repositories.Goals, error) {
+	return gs.goalsRepository.Save(goal)
+}
