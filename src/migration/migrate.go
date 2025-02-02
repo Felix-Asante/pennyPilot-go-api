@@ -12,7 +12,7 @@ import (
 func main() {
 	db := db.ConnectToDB()
 	createDBTypes(db)
-	error := db.AutoMigrate(&repositories.Users{}, &repositories.Accounts{}, &repositories.Incomes{}, &repositories.Goals{}, &repositories.FinancialObligations{})
+	error := db.AutoMigrate(&repositories.Users{}, &repositories.Accounts{}, &repositories.Incomes{}, &repositories.Goals{}, &repositories.FinancialObligations{}, &repositories.Transaction{})
 
 	if error != nil {
 		panic(error)
@@ -35,6 +35,9 @@ func createDBTypes(db *gorm.DB) {
 		END IF;
 		IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'financial_obligation_repayment_type') THEN
 			CREATE TYPE financial_obligation_repayment_type AS ENUM ('weekly', 'daily', 'monthly', 'yearly');
+		END IF;
+		IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transaction_type') THEN
+			CREATE TYPE transaction_type AS ENUM ('deposit', 'withdrawal', 'transfer', 'interest', 'allocation', 'refund','expense', 'penalty');
 		END IF;
 	END
 	$$;

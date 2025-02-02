@@ -17,6 +17,8 @@ type Goals struct {
 	CreatedAt       *time.Time `gorm:"column:created_at" json:"created_at"`
 	UpdatedAt       *time.Time `gorm:"column:updated_at" json:"updated_at"`
 	AccountId       string     `gorm:"column:account_id;not null" json:"account_id"`
+
+	Transactions []Transaction `gorm:"columns:transactions;foreignKey:goal_id;reference:id"`
 }
 
 type GoalsRepository struct {

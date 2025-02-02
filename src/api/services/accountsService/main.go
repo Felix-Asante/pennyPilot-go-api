@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/repositories"
 	goalsservice "github.com/felix-Asante/pennyPilot-go-api/src/api/services/goalsService"
+	"github.com/felix-Asante/pennyPilot-go-api/src/api/services/transactionsService"
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/services/usersServices"
 	customErrors "github.com/felix-Asante/pennyPilot-go-api/src/utils/errors"
 	"gorm.io/gorm"
@@ -85,10 +87,19 @@ func (s *AccountsServices) Find(accountId string, userId string) (*repositories.
 }
 
 func (s *AccountsServices) UpdateBalance(accountId string, amount float64, user string) (*repositories.Accounts, int, error) {
+
+	tx := s.DB.Begin()
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 	// Account belong to user
 	account, statusCode, error := s.Find(accountId, user)
 
 	if error != nil {
+		tx.Rollback()
 		return account, statusCode, error
 	}
 
@@ -100,7 +111,33 @@ func (s *AccountsServices) UpdateBalance(accountId string, amount float64, user 
 
 	account.CurrentBalance = newCurrentBalance
 
-	account, error = s.accountsRepository.Save(account)
+	accountRepository := repositories.NewAccountsRepository(tx)
+	account, error = accountRepository.Save(account)
+	if error != nil {
+		tx.Rollback()
+		return nil, http.StatusInternalServerError, errors.New(customErrors.InternalServerError)
+	}
+	transactionsService := transactionsService.NewTransactionsService(tx)
+	currentTime := time.Now()
+
+	newTransaction := repositories.CreateTransactionDto{
+		User:        user,
+		Description: "Account balance updated",
+		Account:     &accountId,
+		Amount:      amount,
+		Type:        repositories.Deposit,
+		Date:        &currentTime,
+	}
+	_, error = transactionsService.CreateTransaction(newTransaction)
+	if error != nil {
+		tx.Rollback()
+		return nil, http.StatusInternalServerError, errors.New(customErrors.InternalServerError)
+	}
+
+	if error := tx.Commit().Error; error != nil {
+		tx.Rollback()
+		return nil, http.StatusInternalServerError, errors.New(customErrors.InternalServerError)
+	}
 
 	return account, statusCode, error
 }
@@ -207,6 +244,22 @@ func (s *AccountsServices) AllocateToGoal(tx *gorm.DB, accountId string, userId 
 	}
 	if err := tx.Save(goal).Error; err != nil {
 		return customErrors.NewAppError(http.StatusInternalServerError, customErrors.InternalServerError)
+	}
+
+	currentTime := time.Now()
+
+	transactionsService := transactionsService.NewTransactionsService(tx)
+	newTransaction := repositories.CreateTransactionDto{
+		User:        userId,
+		Description: "Goals allocation",
+		Account:     &accountId,
+		Goal:        &goalId,
+		Amount:      amountToAllocate,
+		Type:        repositories.Allocation,
+		Date:        &currentTime,
+	}
+	if _, err := transactionsService.CreateTransaction(newTransaction); err != nil {
+		return customErrors.NewAppError(status, customErrors.InternalServerError)
 	}
 
 	return nil

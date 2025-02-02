@@ -41,3 +41,13 @@ type CreateFinancialObligationDto struct {
 	InterestRate     float64                          `json:"interest_rate" validate:"omitempty,gt=0"`
 	NextDueDate      *time.Time                       `json:"next_due_date" validate:"omitempty"`
 }
+
+type CreateTransactionDto struct {
+	Account     *string         `json:"account_id" validate:"omitempty"`
+	Goal        *string         `json:"goal_id" validate:"omitempty"`
+	Amount      float64         `json:"amount" validate:"required,gt=0"`
+	User        string          `json:"user_id" validate:"required"`
+	Type        TransactionType `json:"type" validate:"required,oneof=deposit withdrawal transfer allocation expense"`
+	Date        *time.Time      `json:"date" validate:"required"`
+	Description string          `json:"description" validate:"omitempty,min=2"`
+}

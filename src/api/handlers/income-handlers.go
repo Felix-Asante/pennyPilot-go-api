@@ -20,7 +20,7 @@ type incomeRoutesHandler struct {
 }
 
 type createIncomeRequest struct {
-	Amount       float64    `json:"amount" validate:"uuid,required,min=1"`
+	Amount       float64    `json:"amount" validate:"required,min=1"`
 	DateReceived *time.Time `json:"date_received" validate:"required"`
 	IncomeType   string     `json:"type" validate:"required"`
 	Frequency    string     `json:"frequency" validate:"required"`

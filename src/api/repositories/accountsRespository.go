@@ -18,7 +18,8 @@ type Accounts struct {
 	UpdatedAt       *time.Time `gorm:"column:updated_at" json:"updated_at"`
 	TotalAllocation float64    `gorm:"column:total_allocation;default:0"`
 
-	Goals []Goals `gorm:"columns:goals;foreignKey:account_id;reference:id"`
+	Goals        []Goals       `gorm:"columns:goals;foreignKey:account_id;reference:id"`
+	Transactions []Transaction `gorm:"columns:transactions;foreignKey:account_id;reference:id"`
 }
 
 type AccountsRepository struct {
