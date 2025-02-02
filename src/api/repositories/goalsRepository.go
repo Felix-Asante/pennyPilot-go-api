@@ -83,6 +83,13 @@ func (repo *GoalsRepository) Save(goal *Goals) (*Goals, error) {
 	return goal, error
 }
 
+func (repo *GoalsRepository) FindUserGoals(userId string, page int, pageSize int) (PaginationResult, error) {
+	var goals []Goals
+	query := repo.db.Model(&Goals{}).Joins("left join accounts on goals.account_id = accounts.id").Where("accounts.user_id = ?", userId).Find(&goals).Order("created_at asc")
+
+	return Paginate(query, page, pageSize, &goals)
+}
+
 func (u *Goals) BeforeCreate(tx *gorm.DB) error {
 
 	u.ID = uuid.New()

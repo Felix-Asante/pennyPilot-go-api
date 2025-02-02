@@ -37,7 +37,7 @@ const (
 	ResetTokenNotExpired           = "reset token not expired"
 	AlreadyRequestedResetCodeError = "already requested reset code"
 	ResetTokenExpiredError         = "reset token expired"
-	ResetTokenNotFound             = "reset token not found"
+	ResetTokenNotFound             = "invalid reset token"
 	AccountAlreadyExistsError      = "account already exists"
 	ConflictError                  = "conflict"
 	NotFoundError                  = "not found"

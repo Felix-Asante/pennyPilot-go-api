@@ -91,7 +91,7 @@ func (s *AuthServices) ResetPasswordRequest(email string) (string, error) {
 	}
 
 	if user.Email == "" {
-		return "", errors.New(customErrors.UserDoesNotExist)
+		return "", errors.New("we couldn't find an account with this email")
 	}
 
 	if user.ResetToken != "" && !hasTokenExpired(user.ResetTokenExpiry) {

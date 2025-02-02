@@ -31,3 +31,13 @@ type UpdateGoalDto struct {
 	DueDate         *time.Time `json:"due_date" validate:"omitempty"`
 	Account         string     `json:"account_id" validate:"omitempty"`
 }
+
+type CreateFinancialObligationDto struct {
+	Type             FinancialObligationType          `json:"type" validate:"required,oneof=loan debt"`
+	TotalAmount      float64                          `json:"total_amount" validate:"required,gt=0"`
+	CounterpartyName string                           `json:"counterparty_name" validate:"required,min=2"`
+	RemainingAmount  float64                          `json:"remaining_amount" validate:"omitempty,min=0"`
+	RepaymentType    FinancialObligationRepaymentType `json:"repayment_type" validate:"required,oneof=weekly monthly yearly daily"`
+	InterestRate     float64                          `json:"interest_rate" validate:"omitempty,gt=0"`
+	NextDueDate      *time.Time                       `json:"next_due_date" validate:"omitempty"`
+}

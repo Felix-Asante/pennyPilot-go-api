@@ -196,3 +196,7 @@ func updateField(condition bool, updateFunc func()) {
 func (gs *GoalsService) SaveGoal(goal *repositories.Goals) (*repositories.Goals, error) {
 	return gs.goalsRepository.Save(goal)
 }
+
+func (gs *GoalsService) FindUserGoals(userId string, page int, pageSize int) (repositories.PaginationResult, error) {
+	return gs.goalsRepository.FindUserGoals(userId, page, pageSize)
+}

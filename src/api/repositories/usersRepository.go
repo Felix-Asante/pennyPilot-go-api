@@ -26,7 +26,8 @@ type Users struct {
 	TotalIncome         float64    `gorm:"column:total_income;default:0"`
 	TotalAllocation     float64    `gorm:"column:total_allocation;default:0"`
 
-	Incomes []Incomes `gorm:"columns:incomes;foreignKey:user_id;reference:id"`
+	Incomes              []Incomes              `gorm:"columns:incomes;foreignKey:user_id;reference:id"`
+	FinancialObligations []FinancialObligations `gorm:"columns:financial_obligations;foreignKey:user_id;reference:id"`
 }
 
 type CreateUserRequest struct {
