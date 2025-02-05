@@ -22,3 +22,7 @@ func NewTransactionsService(db *gorm.DB) *TransactionsService {
 func (s *TransactionsService) CreateTransaction(transaction repositories.CreateTransactionDto) (Transaction, error) {
 	return s.transactionsRepository.Create(transaction)
 }
+
+func (s *TransactionsService) FindAllByUserId(userId string, page int, pageSize int) (repositories.PaginationResult, error) {
+	return s.transactionsRepository.FindAllByUserId(userId, page, pageSize)
+}

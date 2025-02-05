@@ -213,6 +213,10 @@ func (s *IncomeServices) AllocateIncome(tx *gorm.DB, userId string, accountId st
 		return customErrors.NewAppError(status, customErrors.InternalServerError)
 	}
 
+	if account == nil {
+		return customErrors.NewAppError(http.StatusNotFound, "account not found")
+	}
+
 	usersService := usersServices.NewUsersServices(tx)
 	user, err := usersService.FindUserById(userId)
 	if err != nil {

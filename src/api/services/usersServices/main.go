@@ -27,3 +27,19 @@ func (s *UsersServices) FindUserById(id string) (*repositories.Users, error) {
 func (s *UsersServices) SaveUser(user *repositories.Users) (*repositories.Users, error) {
 	return s.userRepository.Save(user)
 }
+func (s *UsersServices) Me(id string) (*repositories.NewUserResponse, error) {
+	user, error := s.userRepository.FindUserById(id)
+
+	userResponse := &repositories.NewUserResponse{
+		ID:              user.ID.String(),
+		FirstName:       user.FirstName,
+		LastName:        user.LastName,
+		Email:           user.Email,
+		CreatedAt:       user.CreatedAt,
+		UpdatedAt:       user.UpdatedAt,
+		MembershipId:    user.MembershipId,
+		TotalIncome:     user.TotalIncome,
+		TotalAllocation: user.TotalAllocation,
+	}
+	return userResponse, error
+}

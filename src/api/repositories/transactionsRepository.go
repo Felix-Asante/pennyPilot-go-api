@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -25,14 +26,17 @@ const (
 type Transaction struct {
 	ID          uuid.UUID       `gorm:"type:uuid;primaryKey;default:uuid_generate_v4();column:id" json:"id"`
 	UserId      string          `gorm:"type:uuid;column:user_id;not null" json:"user"`
-	AccountId   *string         `gorm:"column:account_id" json:"account"`
-	GoalId      *string         `gorm:"column:goal_id" json:"goal"`
+	AccountId   *string         `gorm:"column:account_id" json:"account,omitempty"`
+	GoalId      *string         `gorm:"column:goal_id" json:"goal,omitempty"`
 	Amount      float64         `gorm:"column:amount;default:0;not null" json:"amount"`
 	Type        TransactionType `gorm:"type:transaction_type;column:type;not null"  json:"type"`
 	Date        *time.Time      `gorm:"column:date;not null" json:"date"`
 	Description string          `gorm:"column:description" json:"description"`
 	CreatedAt   *time.Time      `gorm:"column:created_at" json:"created_at"`
 	UpdatedAt   *time.Time      `gorm:"column:updated_at" json:"updated_at"`
+
+	Account *Accounts `gorm:"foreignKey:AccountId" json:"-"`
+	Goal    *Goals    `gorm:"foreignKey:GoalId" json:"-"`
 }
 
 func (a *TransactionType) Scan(value interface{}) error {
@@ -51,6 +55,19 @@ func (a TransactionType) Value() (driver.Value, error) {
 
 func (t *Transaction) TableName() string {
 	return "transactions"
+}
+
+func (t Transaction) MarshalJSON() ([]byte, error) {
+	type Alias Transaction
+	return json.Marshal(&struct {
+		Account *Accounts `json:"account,omitempty"`
+		Goal    *Goals    `json:"goal,omitempty"`
+		*Alias
+	}{
+		Account: t.Account,
+		Goal:    t.Goal,
+		Alias:   (*Alias)(&t),
+	})
 }
 
 type TransactionsRepository struct {
@@ -74,4 +91,11 @@ func (t *TransactionsRepository) Create(data CreateTransactionDto) (*Transaction
 	error := t.db.Create(&newTransaction).Error
 
 	return &newTransaction, error
+}
+
+func (t *TransactionsRepository) FindAllByUserId(userId string, page int, pageSize int) (PaginationResult, error) {
+	var transactions []Transaction
+	query := t.db.Where("user_id = ?", userId).Find(&transactions).Preload("Account").Preload("Goal").Order("created_at desc")
+
+	return Paginate(query, page, pageSize, &transactions)
 }

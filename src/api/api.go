@@ -27,6 +27,7 @@ func (s ApiServer) Start() {
 	r := chi.NewRouter()
 	setupMiddlewares(r)
 	db := db.ConnectToDB()
+
 	repositories.SetUpRepositories(db)
 
 	r.Route("/api/v1", func(route chi.Router) {

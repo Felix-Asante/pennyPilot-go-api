@@ -27,5 +27,7 @@ func (h *UsersHandler) SetupRoutes() {
 		route.Use(jwtauth.Authenticator(jwt.InitAuthToken()))
 		route.Get("/{userId}/accounts", usersRoutesHandler.getAccounts)
 		route.Get("/{userId}/goals", usersRoutesHandler.getGoals)
+		route.Get("/transactions", usersRoutesHandler.getTransactions)
+		route.Get("/me", usersRoutesHandler.getMe)
 	})
 }
