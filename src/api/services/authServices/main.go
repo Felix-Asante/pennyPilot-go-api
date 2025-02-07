@@ -59,6 +59,7 @@ func (s *AuthServices) Login(email string, password string) (*repositories.NewUs
 		MembershipId:    user.MembershipId,
 		TotalIncome:     user.TotalIncome,
 		TotalAllocation: user.TotalAllocation,
+		AllocatedAmount: user.AllocatedAmount,
 	}
 	return userResponse, nil
 }

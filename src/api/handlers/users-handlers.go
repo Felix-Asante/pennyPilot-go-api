@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/felix-Asante/pennyPilot-go-api/src/api/repositories"
 	goalsservice "github.com/felix-Asante/pennyPilot-go-api/src/api/services/goalsService"
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/services/transactionsService"
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/services/usersServices"
@@ -32,8 +33,36 @@ func (u *usersRoutesHandler) getAccounts(w http.ResponseWriter, r *http.Request)
 	}
 
 	userId := claims["id"].(string)
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	pageSize, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	query := r.URL.Query().Get("query")
+	sort := r.URL.Query().Get("sort")
+
+	if page == 0 {
+		page = 1
+	}
+
+	if pageSize == 0 {
+		pageSize = 10
+	}
+
+	if query == "" {
+		query = ""
+	}
+
+	if sort == "" {
+		sort = ""
+	}
+
 	accountService := newAccountServices(u.db)
-	accounts, err := accountService.FindUserAccounts(userId)
+	queries := repositories.AccountQueries{
+		Page:  page,
+		Limit: pageSize,
+		Query: query,
+		Sort:  sort,
+	}
+
+	accounts, err := accountService.FindUserAccounts(userId, queries)
 
 	if err != nil {
 		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)

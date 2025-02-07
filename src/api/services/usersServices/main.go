@@ -40,6 +40,7 @@ func (s *UsersServices) Me(id string) (*repositories.NewUserResponse, error) {
 		MembershipId:    user.MembershipId,
 		TotalIncome:     user.TotalIncome,
 		TotalAllocation: user.TotalAllocation,
+		AllocatedAmount: user.AllocatedAmount,
 	}
 	return userResponse, error
 }

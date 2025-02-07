@@ -25,6 +25,7 @@ type Users struct {
 	MembershipId        string     `gorm:"columns:membership_id;not null"`
 	TotalIncome         float64    `gorm:"column:total_income;default:0"`
 	TotalAllocation     float64    `gorm:"column:total_allocation;default:0"`
+	AllocatedAmount     float64    `gorm:"column:allocated_amount;default:0"`
 
 	Incomes              []Incomes              `gorm:"columns:incomes;foreignKey:user_id;reference:id"`
 	FinancialObligations []FinancialObligations `gorm:"columns:financial_obligations;foreignKey:user_id;reference:id"`
@@ -48,6 +49,7 @@ type NewUserResponse struct {
 	MembershipId    string     `json:"membership_id"`
 	TotalIncome     float64    `json:"total_income"`
 	TotalAllocation float64    `json:"total_allocation"`
+	AllocatedAmount float64    `json:"allocated_amount"`
 }
 
 type UsersRepository struct {
@@ -91,6 +93,7 @@ func (u *UsersRepository) CreateUser(data CreateUserRequest) (*NewUserResponse, 
 		MembershipId:    user.MembershipId,
 		TotalIncome:     user.TotalIncome,
 		TotalAllocation: user.TotalAllocation,
+		AllocatedAmount: user.AllocatedAmount,
 	}
 
 	return &newUser, error

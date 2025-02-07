@@ -3,7 +3,7 @@ package incomeservices
 import (
 	"fmt"
 	"net/http"
-	"sync"
+
 	"time"
 
 	"errors"
@@ -169,89 +169,68 @@ func (s *IncomeServices) AllocateIncomeToAccounts(userId string, accounts []stri
 	}
 
 	tx := s.DB.Begin()
+
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
 		}
 	}()
 
-	var wg sync.WaitGroup
-	errCh := make(chan error, len(accounts))
-
 	for _, account := range accounts {
-		wg.Add(1)
-		go func(account string) {
-			defer wg.Done()
-			if err := s.AllocateIncome(tx, userId, account); err != nil {
-				errCh <- err
-			}
-		}(account)
-	}
-
-	wg.Wait()
-	close(errCh)
-
-	for err := range errCh {
-		tx.Rollback()
-		if appErr, ok := err.(*customErrors.AppError); ok {
-			return appErr.StatusCode, appErr
+		if status, error := s.AllocateIncome(tx, userId, account); error != nil {
+			return status, error
 		}
-		return http.StatusInternalServerError, err
 	}
 
-	if err := tx.Commit().Error; err != nil {
+	if error := tx.Commit().Error; error != nil {
 		return http.StatusInternalServerError, errors.New(customErrors.InternalServerError)
 	}
-
 	return http.StatusOK, nil
 }
 
-func (s *IncomeServices) AllocateIncome(tx *gorm.DB, userId string, accountId string) error {
-	accountService := accountsServices.NewAccountServices(tx)
+func (s *IncomeServices) AllocateIncome(tx *gorm.DB, userId string, accountId string) (int, error) {
+
+	accountService := accountsServices.NewAccountServices(s.DB)
 	account, status, err := accountService.Find(accountId, userId)
 	if err != nil {
-		return customErrors.NewAppError(status, customErrors.InternalServerError)
+		return status, errors.New(customErrors.InternalServerError)
 	}
-
-	if account == nil {
-		return customErrors.NewAppError(http.StatusNotFound, "account not found")
+	usersService := usersServices.NewUsersServices(s.DB)
+	user, error := usersService.FindUserById(userId)
+	if error != nil {
+		return http.StatusInternalServerError, errors.New(customErrors.InternalServerError)
 	}
-
-	usersService := usersServices.NewUsersServices(tx)
-	user, err := usersService.FindUserById(userId)
-	if err != nil {
-		return customErrors.NewAppError(http.StatusInternalServerError, customErrors.InternalServerError)
-	}
-
 	if user.TotalIncome <= 0 {
-		return customErrors.NewAppError(http.StatusBadRequest, "insufficient income")
+		return http.StatusBadRequest, errors.New("insufficient income")
 	}
-
 	amountToAllocate := (account.AllocationPoint / 100) * user.TotalIncome
 	account.CurrentBalance += amountToAllocate
 	user.TotalIncome -= amountToAllocate
-	user.TotalAllocation += amountToAllocate
+	user.AllocatedAmount += amountToAllocate
 
-	if err := tx.Save(account).Error; err != nil {
-		return customErrors.NewAppError(http.StatusInternalServerError, customErrors.InternalServerError)
+	if _, err := accountService.SaveAccounts(account); err != nil {
+		tx.Rollback()
+		return http.StatusInternalServerError, errors.New(customErrors.InternalServerError)
 	}
-	if err := tx.Save(user).Error; err != nil {
-		return customErrors.NewAppError(http.StatusInternalServerError, customErrors.InternalServerError)
+	if _, err := usersService.SaveUser(user); err != nil {
+		tx.Rollback()
+		return http.StatusInternalServerError, errors.New(customErrors.InternalServerError)
 	}
 
 	currentTime := time.Now()
+
 	transactionsService := transactionsService.NewTransactionsService(tx)
 	newTransaction := repositories.CreateTransactionDto{
 		User:        userId,
-		Description: "Income allocation",
+		Description: "Account allocation",
 		Account:     &accountId,
 		Amount:      amountToAllocate,
 		Type:        repositories.Allocation,
 		Date:        &currentTime,
 	}
 	if _, err := transactionsService.CreateTransaction(newTransaction); err != nil {
-		return customErrors.NewAppError(http.StatusInternalServerError, customErrors.InternalServerError)
+		return http.StatusInternalServerError, errors.New(customErrors.InternalServerError)
 	}
 
-	return nil
+	return http.StatusOK, nil
 }

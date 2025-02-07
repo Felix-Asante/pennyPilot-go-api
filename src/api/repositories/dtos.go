@@ -51,3 +51,10 @@ type CreateTransactionDto struct {
 	Date        *time.Time      `json:"date" validate:"required"`
 	Description string          `json:"description" validate:"omitempty,min=2"`
 }
+
+type AccountQueries struct {
+	Page  int    `json:"page" validate:"omitempty"`
+	Limit int    `json:"limit" validate:"omitempty"`
+	Query string `json:"query" validate:"omitempty"`
+	Sort  string `json:"sort" validate:"omitempty"`
+}

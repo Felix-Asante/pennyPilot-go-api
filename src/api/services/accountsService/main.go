@@ -52,7 +52,7 @@ func (s *AccountsServices) Create(data repositories.CreateAccountDto) (*reposito
 	}
 
 	if user.TotalAllocation+data.AllocationPoint > 100 {
-		return nil, http.StatusBadRequest, errors.New("you have exceeded the maximum allocation")
+		return nil, http.StatusBadRequest, errors.New("you have exceeded the maximum allocation point")
 	}
 
 	user.TotalAllocation += data.AllocationPoint
@@ -158,8 +158,8 @@ func (s *AccountsServices) Remove(accountId string, user string) (int, error) {
 	return http.StatusOK, nil
 }
 
-func (s *AccountsServices) FindUserAccounts(userId string) (*[]repositories.Accounts, error) {
-	accounts, err := s.accountsRepository.FindAllByUserID(userId)
+func (s *AccountsServices) FindUserAccounts(userId string, queries repositories.AccountQueries) (repositories.PaginationResult, error) {
+	accounts, err := s.accountsRepository.FindAllByUserID(userId, queries)
 
 	return accounts, err
 }

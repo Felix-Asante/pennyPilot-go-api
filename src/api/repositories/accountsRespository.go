@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -110,12 +111,28 @@ func (u *AccountsRepository) Remove(id string) (bool, error) {
 	return true, nil
 }
 
-func (u *AccountsRepository) FindAllByUserID(userId string) (*[]Accounts, error) {
+func (u *AccountsRepository) FindAllByUserID(userId string, queries AccountQueries) (PaginationResult, error) {
 	var accounts []Accounts
 
-	error := u.db.Where("user_id=?", userId).Find(&accounts).Error
+	query := u.db.Where("user_id = ?", userId)
 
-	return &accounts, error
+	if queries.Sort != "" {
+		parts := strings.Split(queries.Sort, ":")
+
+		if len(parts) == 2 {
+			field := parts[0]
+			order := parts[1]
+			query = query.Order(field + " " + order)
+		}
+	}
+
+	if queries.Query != "" {
+		query = query.Where("name ILIKE ?", "%"+queries.Query+"%")
+	}
+
+	query = query.Find(&accounts)
+
+	return Paginate(query, queries.Page, queries.Limit, &accounts)
 }
 
 func NewAccountsRepository(db *gorm.DB) *AccountsRepository {

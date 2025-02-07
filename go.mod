@@ -7,6 +7,7 @@ require github.com/go-chi/chi/v5 v5.2.0
 require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
+	github.com/go-chi/cors v1.2.1 // indirect
 	github.com/go-chi/jwtauth/v5 v5.3.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
