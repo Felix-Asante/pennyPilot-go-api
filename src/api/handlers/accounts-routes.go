@@ -29,6 +29,8 @@ func (h *AccountsHandler) SetupRoutes() {
 		route.Post("/", accountRoutesHandler.new)
 		route.Route("/{accountId}", func(r chi.Router) {
 			r.Get("/", accountRoutesHandler.get)
+			r.Get("/transactions", accountRoutesHandler.getTransactions)
+			r.Get("/goals", accountRoutesHandler.getGoals)
 			r.Put("/", accountRoutesHandler.update)
 			r.Delete("/", accountRoutesHandler.delete)
 			r.Put("/add-balance", accountRoutesHandler.updateBalance)

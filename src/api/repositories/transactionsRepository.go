@@ -99,3 +99,15 @@ func (t *TransactionsRepository) FindAllByUserId(userId string, page int, pageSi
 
 	return Paginate(query, page, pageSize, &transactions)
 }
+
+func (t *TransactionsRepository) GetTransactionsByAccount(data GetAccountTransactions) (PaginationResult, error) {
+	var transactions []Transaction
+	query := t.db.
+		Select("DATE_TRUNC('month', created_at) as month, *").
+		Where("account_id = ?", data.AccountId).
+		Group("DATE_TRUNC('month', created_at), id").
+		Preload("Account").
+		Order("DATE_TRUNC('month', created_at) desc")
+
+	return Paginate(query, data.Page, data.PageSize, &transactions)
+}

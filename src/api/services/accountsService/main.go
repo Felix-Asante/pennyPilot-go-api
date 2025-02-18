@@ -264,3 +264,53 @@ func (s *AccountsServices) AllocateToGoal(tx *gorm.DB, accountId string, userId 
 
 	return nil
 }
+
+func (s *AccountsServices) GetTransactions(data repositories.GetAccountTransactions) (repositories.PaginationResult, int, error) {
+	emptyResult := repositories.PaginationResult{}
+
+	account, status, err := s.Find(data.AccountId, data.UserId)
+	if err != nil {
+		return emptyResult, status, err
+	}
+
+	if account.Name == "" {
+		return emptyResult, http.StatusNotFound, fmt.Errorf("account %s", customErrors.NotFoundError)
+	}
+
+	if account.UserID != data.UserId {
+		return emptyResult, http.StatusForbidden, fmt.Errorf("you are not allowed to view this account")
+	}
+
+	transactionsRepo := repositories.NewTransactionsRepository(s.DB)
+	transactions, err := transactionsRepo.GetTransactionsByAccount(data)
+	if err != nil {
+		return emptyResult, http.StatusInternalServerError, fmt.Errorf("internal server error")
+	}
+
+	return transactions, http.StatusOK, nil
+}
+
+func (s *AccountsServices) GetGoals(accountId, userId string) (*[]repositories.Goals, int, error) {
+	emptyResult := &[]repositories.Goals{}
+
+	account, status, err := s.Find(accountId, userId)
+	if err != nil {
+		return emptyResult, status, err
+	}
+
+	if account.Name == "" {
+		return emptyResult, http.StatusNotFound, fmt.Errorf("account %s", customErrors.NotFoundError)
+	}
+
+	if account.UserID != userId {
+		return emptyResult, http.StatusForbidden, fmt.Errorf("you are not allowed to view this account")
+	}
+
+	goalsRepo := repositories.NewGoalsRepository(s.DB)
+	goals, err := goalsRepo.GetGoalsByAccount(accountId)
+	if err != nil {
+		return emptyResult, http.StatusInternalServerError, fmt.Errorf("internal server error")
+	}
+
+	return goals, http.StatusOK, nil
+}

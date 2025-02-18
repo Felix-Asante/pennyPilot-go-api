@@ -72,6 +72,13 @@ func (repo *GoalsRepository) FindByID(id string) (*Goals, error) {
 	return &goal, error
 }
 
+func (repo *GoalsRepository) GetGoalsByAccount(accountId string) (*[]Goals, error) {
+	var goal []Goals
+	error := repo.db.Where("account_id = ?", accountId).Find(&goal).Error
+
+	return &goal, error
+}
+
 func (repo *GoalsRepository) Remove(id string) (bool, error) {
 	var goals Goals
 	error := repo.db.Where("id = ?", id).Delete(&goals).Error

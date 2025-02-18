@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/repositories"
 	accountsServices "github.com/felix-Asante/pennyPilot-go-api/src/api/services/accountsService"
@@ -216,6 +217,90 @@ func (h *accountsRoutesHandler) allocate(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)
+}
+
+func (h *accountsRoutesHandler) getTransactions(w http.ResponseWriter, r *http.Request) {
+	accountId := chi.URLParam(r, "accountId")
+
+	if err := uuid.Validate(accountId); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, customErrors.InvalidAccountIDError, nil)
+		return
+	}
+
+	_, claims, error := jwtauth.FromContext(r.Context())
+
+	if error != nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+	userId := claims["id"].(string)
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	pageSize, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	query := r.URL.Query().Get("query")
+	sort := r.URL.Query().Get("sort")
+
+	if page == 0 {
+		page = 1
+	}
+
+	if pageSize == 0 {
+		pageSize = 10
+	}
+
+	if query == "" {
+		query = ""
+	}
+
+	if sort == "" {
+		sort = ""
+	}
+	accountService := newAccountServices(h.db)
+
+	transactionArgs := repositories.GetAccountTransactions{
+		AccountId: accountId,
+		UserId:    userId,
+		Page:      page,
+		PageSize:  pageSize,
+	}
+
+	if transactions, status, error := accountService.GetTransactions(transactionArgs); error != nil {
+		customErrors.RespondWithError(w, status, customErrors.InternalServerError, error.Error(), nil)
+		return
+	} else {
+		jsonResponse, _ := json.Marshal(transactions)
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonResponse)
+	}
+}
+
+func (h *accountsRoutesHandler) getGoals(w http.ResponseWriter, r *http.Request) {
+	accountId := chi.URLParam(r, "accountId")
+
+	if err := uuid.Validate(accountId); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, customErrors.InvalidAccountIDError, nil)
+		return
+	}
+
+	_, claims, error := jwtauth.FromContext(r.Context())
+
+	if error != nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+	userId := claims["id"].(string)
+
+	accountService := newAccountServices(h.db)
+
+	if goals, status, error := accountService.GetGoals(accountId, userId); error != nil {
+		customErrors.RespondWithError(w, status, customErrors.InternalServerError, error.Error(), nil)
+		return
+	} else {
+		jsonResponse, _ := json.Marshal(goals)
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonResponse)
+	}
 }
 
 func (h *accountsRoutesHandler) transfer(w http.ResponseWriter, r *http.Request) {

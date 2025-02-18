@@ -58,3 +58,10 @@ type AccountQueries struct {
 	Query string `json:"query" validate:"omitempty"`
 	Sort  string `json:"sort" validate:"omitempty"`
 }
+
+type GetAccountTransactions struct {
+	AccountId string `json:"account_id" validate:"required"`
+	Page      int    `json:"page" validate:"omitempty"`
+	PageSize  int    `json:"page_size" validate:"omitempty"`
+	UserId    string `json:"user_id" validate:"required"`
+}
