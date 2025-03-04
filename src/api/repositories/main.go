@@ -3,6 +3,8 @@ package repositories
 import (
 	"math"
 
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -20,6 +22,14 @@ type PaginationMeta struct {
 	CurrentPage int `json:"current_page"`
 	TotalItems  int `json:"total_items"`
 	TotalPages  int `json:"total_pages"`
+}
+
+type ExpenseCategoryResponse struct {
+	ID int `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Name string `json:"name"`
+	Icon string `json:"icon"`
 }
 
 func Paginate(db *gorm.DB, page, pageSize int, result interface{}) (PaginationResult, error) {

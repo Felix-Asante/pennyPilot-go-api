@@ -19,7 +19,8 @@ func (h *Handlers) SetupRoutes(db *gorm.DB) {
 	accountsHandler := NewAccountHandler(h, db)
 	incomesHandler := NewIncomeHandler(h, db)
 	goalsHandler := NewGoalsHandler(h, db)
-	handlers := []Handler{authHandler, usersHandler, accountsHandler, incomesHandler, goalsHandler}
+	expenseHandler := NewExpenseHandler(h, db)
+	handlers := []Handler{authHandler, usersHandler, accountsHandler, incomesHandler, goalsHandler, expenseHandler}
 	createAllRoutes(handlers)
 }
 

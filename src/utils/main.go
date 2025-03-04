@@ -30,3 +30,9 @@ const (
 	BiWeekly IncomeFrequency = "bi-weekly"
 	OneTime  IncomeFrequency = "one-time"
 )
+
+func SetDefaultValues(condition bool, updateFunc func()) {
+	if condition {
+		updateFunc()
+	}
+}

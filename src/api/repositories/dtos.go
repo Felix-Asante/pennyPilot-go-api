@@ -1,6 +1,8 @@
 package repositories
 
-import "time"
+import (
+	"time"
+)
 
 type CreateIncomeDto struct {
 	Amount       float64    `json:"amount" validate:"required;min=1"`
@@ -60,8 +62,68 @@ type AccountQueries struct {
 }
 
 type GetAccountTransactions struct {
-	AccountId string `json:"account_id" validate:"required"`
-	Page      int    `json:"page" validate:"omitempty"`
-	PageSize  int    `json:"page_size" validate:"omitempty"`
-	UserId    string `json:"user_id" validate:"required"`
+	AccountId string          `json:"account_id" validate:"required"`
+	Page      int             `json:"page" validate:"omitempty"`
+	PageSize  int             `json:"page_size" validate:"omitempty"`
+	UserId    string          `json:"user_id" validate:"required"`
+	Type      TransactionType `json:"type" validate:"required,oneof=deposit withdrawal transfer allocation expense"`
+	Query     string          `json:"query" validate:"omitempty"`
+	StartDate *time.Time      `json:"start_date" validate:"omitempty"`
+	EndDate   *time.Time      `json:"end_date" validate:"omitempty"`
+}
+
+type CreateExpenseDto struct {
+	Amount      float64    `json:"amount" validate:"required,min=1"`
+	Category    int  `json:"category" validate:"required"`
+	Description string     `json:"description" validate:"required"`
+	Date        *time.Time `json:"date" validate:"required"`
+	Account     string  `json:"account" validate:"required"`
+}
+
+type CreateExpenseCategoryDto struct {
+	Name string `json:"name" validate:"required,min=2"`
+	User string `json:"user_id" validate:"required"`
+	Icon string `json:"icon" validate:"required"`
+}
+
+type PaginationOptions struct {
+	Page  int    `json:"page" validate:"omitempty"`
+	Limit int    `json:"limit" validate:"omitempty"`
+	Query string `json:"query" validate:"omitempty"`
+	Sort  string `json:"sort" validate:"omitempty"`
+}
+
+type GetExpenseCategoryDto struct {
+	User       string     `json:"user_id" validate:"required"`
+	Year       int        `json:"year" validate:"required"`
+	StartDate  *time.Time `json:"start_date" validate:"omitempty"`
+	EndDate    *time.Time `json:"end_date" validate:"omitempty"`
+	Pagination *PaginationOptions
+}
+
+type GetAccountExpensesDto struct {
+	Account   string     `json:"account" validate:"required"`
+	Year      int        `json:"year" validate:"required"`
+	StartDate *time.Time `json:"start_date" validate:"omitempty"`
+	EndDate   *time.Time `json:"end_date" validate:"omitempty"`
+}
+
+type GetExpenseByCategoryDto struct {
+	Category   string `json:"category" validate:"required"`
+	Pagination *PaginationOptions
+}
+
+func (p *PaginationOptions) SetDefaultValues() {
+	if p.Page <= 0 {
+		p.Page = 1
+	}
+	if p.Limit <= 0 {
+		p.Limit = 10
+	}
+	if p.Sort == "" {
+		p.Sort = "desc"
+	}
+	if p.Query == "" {
+		p.Query = ""
+	}
 }

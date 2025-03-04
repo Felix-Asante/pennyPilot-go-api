@@ -102,12 +102,21 @@ func (t *TransactionsRepository) FindAllByUserId(userId string, page int, pageSi
 
 func (t *TransactionsRepository) GetTransactionsByAccount(data GetAccountTransactions) (PaginationResult, error) {
 	var transactions []Transaction
+
 	query := t.db.
 		Select("DATE_TRUNC('month', created_at) as month, *").
 		Where("account_id = ?", data.AccountId).
 		Group("DATE_TRUNC('month', created_at), id").
 		Preload("Account").
 		Order("DATE_TRUNC('month', created_at) desc")
+
+	if !data.StartDate.IsZero() && !data.EndDate.IsZero() {
+		query = query.Where("date BETWEEN ? AND ?", data.StartDate, data.EndDate)
+	}
+
+	if data.Type != "" {
+		query = query.Where("type = ?", TransactionType(data.Type))
+	}
 
 	return Paginate(query, data.Page, data.PageSize, &transactions)
 }

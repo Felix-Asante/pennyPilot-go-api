@@ -28,6 +28,8 @@ func (h *UsersHandler) SetupRoutes() {
 		route.Get("/{userId}/accounts", usersRoutesHandler.getAccounts)
 		route.Get("/{userId}/goals", usersRoutesHandler.getGoals)
 		route.Get("/transactions", usersRoutesHandler.getTransactions)
+		route.Get("/{userId}/expenses", usersRoutesHandler.getExpenses)
+		route.Get("/{userId}/total-expenses", usersRoutesHandler.getTotalExpenses)
 		route.Get("/me", usersRoutesHandler.getMe)
 	})
 }

@@ -21,6 +21,7 @@ type Accounts struct {
 
 	Goals        []Goals       `gorm:"columns:goals;foreignKey:account_id;reference:id"`
 	Transactions []Transaction `gorm:"columns:transactions;foreignKey:account_id;reference:id"`
+	Expenses     []Expenses    `gorm:"columns:expenses;foreignKey:account_id;reference:id"`
 }
 
 type AccountsRepository struct {

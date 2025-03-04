@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/repositories"
 	accountsServices "github.com/felix-Asante/pennyPilot-go-api/src/api/services/accountsService"
+	"github.com/felix-Asante/pennyPilot-go-api/src/utils/dates"
 	customErrors "github.com/felix-Asante/pennyPilot-go-api/src/utils/errors"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
@@ -237,7 +239,9 @@ func (h *accountsRoutesHandler) getTransactions(w http.ResponseWriter, r *http.R
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 	pageSize, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	query := r.URL.Query().Get("query")
-	sort := r.URL.Query().Get("sort")
+	transactionType := r.URL.Query().Get("type")
+	startDate, _ := dates.ParseDate(r.URL.Query().Get("start_date"))
+	endDate, _ := dates.ParseDate(r.URL.Query().Get("end_date"))
 
 	if page == 0 {
 		page = 1
@@ -251,9 +255,24 @@ func (h *accountsRoutesHandler) getTransactions(w http.ResponseWriter, r *http.R
 		query = ""
 	}
 
-	if sort == "" {
-		sort = ""
+	if transactionType == "" {
+		transactionType = ""
 	}
+
+	if !startDate.IsZero() && endDate.IsZero() {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, "end_date is required if start_date is provided", nil)
+		return
+	}
+	if startDate.IsZero() && !endDate.IsZero() {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, "start_date is required if end_date is provided", nil)
+		return
+	}
+
+	// if (startDate != "" && !dates.IsValidDate(startDate)) || (endDate != "" && !dates.IsValidDate(endDate)) {
+	// 	customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, "start_date and end_date must be valid dates", nil)
+	// 	return
+	// }
+
 	accountService := newAccountServices(h.db)
 
 	transactionArgs := repositories.GetAccountTransactions{
@@ -261,6 +280,10 @@ func (h *accountsRoutesHandler) getTransactions(w http.ResponseWriter, r *http.R
 		UserId:    userId,
 		Page:      page,
 		PageSize:  pageSize,
+		Type:      repositories.TransactionType(transactionType),
+		Query:     query,
+		StartDate: &startDate,
+		EndDate:   &endDate,
 	}
 
 	if transactions, status, error := accountService.GetTransactions(transactionArgs); error != nil {
@@ -301,6 +324,52 @@ func (h *accountsRoutesHandler) getGoals(w http.ResponseWriter, r *http.Request)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonResponse)
 	}
+}
+
+func (h *accountsRoutesHandler) getExpenses(w http.ResponseWriter, r *http.Request) {
+	accountId := chi.URLParam(r, "accountId")
+	year, _ := strconv.Atoi(chi.URLParam(r, "year"))
+	startDate, _ := dates.ParseDate(r.URL.Query().Get("start_date"))
+	endDate, _ := dates.ParseDate(r.URL.Query().Get("end_date"))
+
+	if year == 0 {
+		year = time.Now().Year()
+	}
+
+	if err := uuid.Validate(accountId); err != nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, customErrors.InvalidAccountIDError, nil)
+		return
+	}
+
+	if !startDate.IsZero() && endDate.IsZero() {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, "end_date is required if start_date is provided", nil)
+		return
+	}
+	if startDate.IsZero() && !endDate.IsZero() {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, "start_date is required if end_date is provided", nil)
+		return
+	}
+
+	expenseRepo := repositories.NewExpenseRepository(h.db)
+	expenseArgs := repositories.GetAccountExpensesDto{
+		Account:   accountId,
+		StartDate: &startDate,
+		EndDate:   &endDate,
+		Year:      year,
+	}
+
+	expenses, error := expenseRepo.GetByAccount(expenseArgs)
+
+	if error != nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+
+
+	jsonResponse, _ := json.Marshal(expenses)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
 }
 
 func (h *accountsRoutesHandler) transfer(w http.ResponseWriter, r *http.Request) {

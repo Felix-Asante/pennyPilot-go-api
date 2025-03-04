@@ -30,6 +30,7 @@ type Users struct {
 	Incomes              []Incomes              `gorm:"columns:incomes;foreignKey:user_id;reference:id"`
 	FinancialObligations []FinancialObligations `gorm:"columns:financial_obligations;foreignKey:user_id;reference:id"`
 	Transactions         []Transaction          `gorm:"columns:transactions;foreignKey:user_id;reference:id"`
+	ExpensesCategory     []ExpenseCategory      `gorm:"columns:expenses_category;foreignKey:user_id;reference:id"`
 }
 
 type CreateUserRequest struct {

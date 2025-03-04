@@ -12,7 +12,7 @@ import (
 func main() {
 	db := db.ConnectToDB()
 	createDBTypes(db)
-	error := db.AutoMigrate(&repositories.Users{}, &repositories.Accounts{}, &repositories.Incomes{}, &repositories.Goals{}, &repositories.FinancialObligations{}, &repositories.Transaction{})
+	error := db.AutoMigrate(&repositories.Users{}, &repositories.Accounts{}, &repositories.Incomes{}, &repositories.Goals{}, &repositories.FinancialObligations{}, &repositories.Transaction{}, &repositories.Expenses{}, &repositories.ExpenseCategory{})
 
 	if error != nil {
 		panic(error)
