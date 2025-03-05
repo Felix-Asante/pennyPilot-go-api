@@ -207,6 +207,7 @@ func (s *IncomeServices) AllocateIncome(tx *gorm.DB, userId string, accountId st
 	account.CurrentBalance += amountToAllocate
 	user.TotalIncome -= amountToAllocate
 	user.AllocatedAmount += amountToAllocate
+	user.TotalAllocation += amountToAllocate
 
 	if _, err := accountService.SaveAccounts(account); err != nil {
 		tx.Rollback()

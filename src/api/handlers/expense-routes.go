@@ -26,7 +26,8 @@ func (h *ExpenseRoutesHandler) SetupRoutes() {
 		route.Use(jwtauth.Authenticator(jwt.InitAuthToken()))
 
 		route.Post("/", expenseRoutesHandler.new)
-		route.Post("/category", expenseRoutesHandler.newExpenseCategory)
+		route.Post("/categories", expenseRoutesHandler.newExpenseCategory)
+		route.Delete("/categories/{categoryId}", expenseRoutesHandler.deleteCategory)
 
 	})
 

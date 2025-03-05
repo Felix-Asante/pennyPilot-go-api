@@ -31,7 +31,7 @@ type FinancialObligations struct {
 	CounterpartyName string                           `gorm:"column:counterparty_name;not null" json:"counterparty_name"`
 	RemainingAmount  float64                          `gorm:"column:remaining_amount;not null" json:"remaining_amount"`
 	RepaymentType    FinancialObligationRepaymentType `gorm:"type:financial_obligation_repayment_type;column:financial_obligation_repayment_type;not null"  json:"financial_obligation_repayment_type"`
-	InterestRate     float64                          `gorm:"column:interest_rate;" json:"interest_rate"`
+	InterestRate     *float64                          `gorm:"column:interest_rate;" json:"interest_rate"`
 	NextDueDate      *time.Time                       `gorm:"column:next_due_date;" json:"next_due_date"`
 	CreatedAt        *time.Time                       `gorm:"column:created_at" json:"created_at"`
 	UpdatedAt        *time.Time                       `gorm:"column:updated_at" json:"updated_at"`
@@ -96,7 +96,7 @@ func (u *FinancialObligationsRepository) Create(dto CreateFinancialObligation) (
 		CounterpartyName: dto.CounterpartyName,
 		RemainingAmount:  dto.RemainingAmount,
 		RepaymentType:    FinancialObligationRepaymentType(dto.RepaymentType),
-		InterestRate:     dto.InterestRate,
+		InterestRate:     &dto.InterestRate,
 		NextDueDate:      dto.NextDueDate,
 		UserID:           dto.UserId,
 	}
@@ -126,4 +126,11 @@ func (u *FinancialObligationsRepository) FindByUserID(id string) ([]FinancialObl
 	var obligations []FinancialObligations
 	error := u.db.Where("user_id = ?", id).Find(&obligations).Error
 	return obligations, error
+}
+
+func (foRepo *FinancialObligationsRepository) FindAllUser(data GetUserFiancialObligationDto) (PaginationResult,error){
+	var obligations []FinancialObligations
+	query := foRepo.db.Where("user_id =?", data.User)
+
+	return Paginate(query,data.Pagination.Page,data.Pagination.Page,&obligations)
 }

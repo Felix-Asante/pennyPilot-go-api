@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/felix-Asante/pennyPilot-go-api/src/api/repositories"
 	customErrors "github.com/felix-Asante/pennyPilot-go-api/src/utils/errors"
@@ -142,6 +143,37 @@ func (h *expenseRoutesHandler) newExpenseCategory(w http.ResponseWriter, r *http
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)
 
+}
+
+func (h *expenseRoutesHandler) deleteCategory(w http.ResponseWriter, r *http.Request) {
+	_, claims, error := jwtauth.FromContext(r.Context())
+	if error!= nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+	userId := claims["id"].(string)
+	categoryId,_ := strconv.Atoi(r.URL.Query().Get("categoryId"))
+	expenseCategoryRepo := repositories.NewExpenseCategoryRepository(h.db)
+
+	category,error := expenseCategoryRepo.GetByID(categoryId)
+	if error!= nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+	if category.UserID != userId {
+		customErrors.RespondWithError(w, http.StatusForbidden, customErrors.ForbiddenError, "unauthorized", nil)
+		return
+	}
+	// decide whether to add the amount to account or NOT
+	if err := expenseCategoryRepo.Delete(categoryId); err!= nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, customErrors.InternalServerError, nil)
+		return
+	}
+
+	jsonResponse, _ := json.Marshal(map[string]interface{}{"success": true})
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
 }
 
 func creditAccount(accountId string, userId string, amount float64, tx *gorm.DB) (*repositories.Accounts, error) {

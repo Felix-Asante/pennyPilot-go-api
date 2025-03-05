@@ -46,11 +46,32 @@ func (expCategory *ExpenseCategoryRepository) Create(data CreateExpenseCategoryD
 	return newCategory, error
 }
 
-func (expCategory *ExpenseCategoryRepository) FindByUserID(data GetExpenseCategoryDto) (PaginationResult, error) {
+func (expCategory *ExpenseCategoryRepository) FindAllByUserID(id string) ([]ExpenseCategory, error) {
 	var categories []ExpenseCategory
-	query := expCategory.db.Where("user_id = ?", data.User).Find(&categories)
+	error := expCategory.db.Where("user_id = ?", id).Find(&categories).Error
 
-	return Paginate(query, data.Pagination.Page, data.Pagination.Limit, &categories)
+	return categories,error
+}
+
+func (expRepo *ExpensesRepository) Delete(id string) error {
+	error := expRepo.db.Where("id =?", id).Delete(&Expenses{}).Error
+	return error
+}
+func (expRepo *ExpensesRepository) GetByID(id string) (*Expenses, error) {
+	var expense Expenses
+	error := expRepo.db.Where("id =?", id).First(&expense).Error
+	return &expense, error
+}
+
+func (expCateg *ExpenseCategoryRepository) GetByID(id int) (*ExpenseCategory, error) {
+	var category ExpenseCategory
+	error := expCateg.db.Where("id =?", id).First(&category).Error
+	return &category, error
+}
+
+func (expCateg *ExpenseCategoryRepository) Delete(id int) error {
+	error := expCateg.db.Where("id =?", id).Delete(&ExpenseCategory{}).Error
+	return error
 }
 
 func (expRepo *ExpensesRepository) GetByAccount(data GetAccountExpensesDto) ([]Expenses, error) {
@@ -82,7 +103,18 @@ func (expRepo *ExpensesRepository) GetUserTotal(user string) (float64, error) {
 	return totalExpense, nil
 }
 
-func (expRepo *ExpensesRepository) Get(data GetExpenseCategoryDto) (PaginationResult, error) {
+
+func (expRepo *ExpensesRepository) GetTotalByAccount(data GetAccountExpensesDto) (float64, error) {
+	var totalExpense float64
+	err := expRepo.db.Model(&Expenses{}).Select("COALESCE(SUM(amount), 0)").
+	Where("account_id =?", data.Account).Row().Scan(&totalExpense)
+	if err != nil {
+		return 0, err
+	}
+	return totalExpense, nil
+}
+
+func (expRepo *ExpensesRepository) Get(data GetExpenseDto) (PaginationResult, error) {
 	var expenses []Expenses
 
 	query := expRepo.db.Model(&Expenses{}).

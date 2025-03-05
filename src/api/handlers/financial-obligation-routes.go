@@ -21,7 +21,7 @@ func (h *FinancialObligationHandler) SetupRoutes() {
 
 	routesHandler := financialObligationRoutesHandler{db: h.db}
 
-	router.Route("/accounts", func(route chi.Router) {
+	router.Route("/financial-obligations", func(route chi.Router) {
 
 		route.Use(jwtauth.Verifier(jwt.InitAuthToken()))
 		route.Use(jwtauth.Authenticator(jwt.InitAuthToken()))
@@ -29,6 +29,7 @@ func (h *FinancialObligationHandler) SetupRoutes() {
 		route.Post("/", routesHandler.new)
 		route.Route("/{obligationId}", func(r chi.Router) {
 			r.Get("/", routesHandler.get)
+			r.Delete("/", routesHandler.delete)
 		})
 
 	})

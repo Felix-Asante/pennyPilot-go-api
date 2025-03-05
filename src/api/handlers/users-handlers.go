@@ -219,7 +219,7 @@ func (u *usersRoutesHandler) getExpenses(w http.ResponseWriter, r *http.Request)
 	}
 	paginationOptions.SetDefaultValues()
 
-	expenses, err := expenseRepo.Get(repositories.GetExpenseCategoryDto{
+	expenses, err := expenseRepo.Get(repositories.GetExpenseDto{
 		User:       userId,
 		Year:       year,
 		StartDate:  &startDate,
@@ -269,4 +269,97 @@ func (u *usersRoutesHandler) getTotalExpenses(w http.ResponseWriter, r *http.Req
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)
+}
+
+func (u *usersRoutesHandler) getExpenseCategories(w http.ResponseWriter, r *http.Request) {
+	_, claims, error := jwtauth.FromContext(r.Context())
+	if error!= nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+	id := chi.URLParam(r, "userId")
+	userId := claims["id"].(string)
+	if err := uuid.Validate(id); err!= nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, "invalid user id", nil)
+		return
+	}
+	if id!= userId {
+		customErrors.RespondWithError(w, http.StatusForbidden, customErrors.ForbiddenError, "Access to this ressource denied", nil)
+		return
+	}
+	expenseRepo := repositories.NewExpenseCategoryRepository(u.db)
+	categories, err := expenseRepo.FindAllByUserID(id)
+	if err!= nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+	jsonResponse, _ := json.Marshal(categories)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
+}
+
+func (fo *usersRoutesHandler) getFinancialObligations(w http.ResponseWriter, r *http.Request) {
+	_, claims, error := jwtauth.FromContext(r.Context())
+	if error!= nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+	userId := claims["id"].(string)
+	page,_ := strconv.Atoi(r.URL.Query().Get("page"))
+	limit,_ := strconv.Atoi(r.URL.Query().Get("limit"))
+
+	foRepo := repositories.NewFinancialObligationsRepository(fo.db)
+
+	fosArgs := repositories.GetUserFiancialObligationDto{
+		User: userId,
+		Pagination: &repositories.PaginationOptions{
+			Page: page,
+			Limit: limit,
+			Sort: "desc",
+			Query: "",
+		},
+	}
+	fosArgs.Pagination.SetDefaultValues()
+	
+	fobs,error := foRepo.FindAllUser(fosArgs)
+	if error!= nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError,"Internal server error", nil)
+		return
+	}
+	jsonResponse, _ := json.Marshal(fobs)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
+}
+
+func (u *usersRoutesHandler) totalSavings(w http.ResponseWriter, r *http.Request) {
+	_, claims, error := jwtauth.FromContext(r.Context())
+	if error!= nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+	id := chi.URLParam(r, "userId")
+	userId := claims["id"].(string)
+	if err := uuid.Validate(id); err!= nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, "invalid user id", nil)
+		return
+	}
+	if id!= userId {
+		customErrors.RespondWithError(w, http.StatusForbidden, customErrors.ForbiddenError, "Access to this ressource denied", nil)
+		return
+	}
+
+	accountRepo := repositories.NewAccountsRepository(u.db)
+	totalSavings, error := accountRepo.FindTotalSavings(id)
+	if error!= nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+
+	jsonResponse := map[string]float64{"total_savings": totalSavings}
+	jsonData, _ := json.Marshal(jsonResponse)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonData)
 }

@@ -93,7 +93,7 @@ type PaginationOptions struct {
 	Sort  string `json:"sort" validate:"omitempty"`
 }
 
-type GetExpenseCategoryDto struct {
+type GetExpenseDto struct {
 	User       string     `json:"user_id" validate:"required"`
 	Year       int        `json:"year" validate:"required"`
 	StartDate  *time.Time `json:"start_date" validate:"omitempty"`
@@ -110,6 +110,11 @@ type GetAccountExpensesDto struct {
 
 type GetExpenseByCategoryDto struct {
 	Category   string `json:"category" validate:"required"`
+	Pagination *PaginationOptions
+}
+
+type GetUserFiancialObligationDto struct {
+	User       string     `json:"user_id" validate:"required"`
 	Pagination *PaginationOptions
 }
 

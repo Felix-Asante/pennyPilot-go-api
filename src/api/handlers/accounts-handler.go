@@ -372,6 +372,44 @@ func (h *accountsRoutesHandler) getExpenses(w http.ResponseWriter, r *http.Reque
 	w.Write(jsonResponse)
 }
 
+func (h *accountsRoutesHandler) getTotalExpenses(w http.ResponseWriter, r *http.Request) {
+	accountId := chi.URLParam(r, "accountId")
+	year, _ := strconv.Atoi(chi.URLParam(r, "year"))
+	startDate, _ := dates.ParseDate(r.URL.Query().Get("start_date"))
+	endDate, _ := dates.ParseDate(r.URL.Query().Get("end_date"))
+	if year == 0 {
+		year = time.Now().Year()
+	}
+	if err := uuid.Validate(accountId); err!= nil {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, customErrors.InvalidAccountIDError, nil)
+		return
+	}
+	if!startDate.IsZero() && endDate.IsZero() {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, "end_date is required if start_date is provided", nil)
+		return
+	}
+	if startDate.IsZero() &&!endDate.IsZero() {
+		customErrors.RespondWithError(w, http.StatusBadRequest, customErrors.BadRequest, "start_date is required if end_date is provided", nil)
+		return
+	}
+	expenseRepo := repositories.NewExpenseRepository(h.db)
+	expenseArgs := repositories.GetAccountExpensesDto{
+		Account:   accountId,
+		StartDate: &startDate,
+		EndDate:   &endDate,
+		Year:      year,
+	}
+	totalExpenses, error := expenseRepo.GetTotalByAccount(expenseArgs)
+	if error!= nil {
+		customErrors.RespondWithError(w, http.StatusInternalServerError, customErrors.InternalServerError, error.Error(), nil)
+		return
+	}
+	jsonResponse, _ := json.Marshal(map[string]interface{}{"total": totalExpenses})
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
+}
+
 func (h *accountsRoutesHandler) transfer(w http.ResponseWriter, r *http.Request) {
 
 }

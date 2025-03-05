@@ -36,6 +36,7 @@ func (h *AccountsHandler) SetupRoutes() {
 			r.Put("/add-balance", accountRoutesHandler.updateBalance)
 			r.Put("/allocate", accountRoutesHandler.allocate)
 			r.Get("/expenses", accountRoutesHandler.getExpenses)
+			r.Get("/expenses/total", accountRoutesHandler.getTotalExpenses)
 		})
 
 		route.Post("/transfer", accountRoutesHandler.transfer)

@@ -136,6 +136,20 @@ func (u *AccountsRepository) FindAllByUserID(userId string, queries AccountQueri
 	return Paginate(query, queries.Page, queries.Limit, &accounts)
 }
 
+func (u *AccountsRepository) FindTotalSavings(userId string) (float64, error) {
+	var totalSavings float64
+	err := u.db.Model(&Accounts{}).
+		Select("COALESCE(SUM(current_balance + total_allocation), 0) as total_savings").
+		Where("user_id = ?", userId).
+		Row().
+		Scan(&totalSavings)
+
+	if err != nil {
+		return 0, err
+	}
+	return totalSavings, nil
+}
+
 func NewAccountsRepository(db *gorm.DB) *AccountsRepository {
 
 	return &AccountsRepository{db}
