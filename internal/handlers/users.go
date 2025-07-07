@@ -7,5 +7,6 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getMe(w http.ResponseWriter, r *http.Request) {
+
 	w.Write([]byte("get me"))
 }

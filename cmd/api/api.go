@@ -31,13 +31,14 @@ func Init(apiConfig *Server) *Server {
 }
 
 func (s *Server) Run() {
-	runAutoMigrate(s.DB)
+	runMigrations(s.DB)
 	setUpMiddleware(s.Router)
 
 	handler := handlers.NewHandler(&handlers.Handler{
 		DB:     s.DB,
 		Logger: s.Logger,
 		Router: s.Router,
+		Models: models.NewModels(s.DB),
 	})
 
 	handler.CreateRoutes()
@@ -46,7 +47,7 @@ func (s *Server) Run() {
 	http.ListenAndServe(":"+s.Port, s.Router)
 }
 
-func runAutoMigrate(db *gorm.DB) {
+func runMigrations(db *gorm.DB) {
 	models := []interface{}{
 		&models.User{},
 	}

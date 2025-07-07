@@ -3,6 +3,7 @@ package handlers
 import (
 	"log/slog"
 
+	"github.com/Felix-Asante/pennyPilot-go-api/internal/models"
 	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
 )
@@ -11,6 +12,7 @@ type Handler struct {
 	DB     *gorm.DB
 	Logger *slog.Logger
 	Router *chi.Mux
+	Models *models.Models
 }
 
 func NewHandler(config *Handler) *Handler {
@@ -18,6 +20,7 @@ func NewHandler(config *Handler) *Handler {
 		DB:     config.DB,
 		Logger: config.Logger,
 		Router: config.Router,
+		Models: config.Models,
 	}
 }
 
