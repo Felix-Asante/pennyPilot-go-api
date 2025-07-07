@@ -5,53 +5,55 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Felix-Asante/pennyPilot-go-api/internal/handlers"
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/models"
-	"github.com/Felix-Asante/pennyPilot-go-api/pkg/db"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httprate"
+	"gorm.io/gorm"
 )
 
 type Server struct {
-	DbConfig *db.DbConfig
-	Logger   *slog.Logger
-	Router   *chi.Mux
-	Port     string
+	DB     *gorm.DB
+	Logger *slog.Logger
+	Router *chi.Mux
+	Port   string
 }
 
 func Init(apiConfig *Server) *Server {
 	return &Server{
-		DbConfig: apiConfig.DbConfig,
-		Logger:   apiConfig.Logger,
-		Router:   apiConfig.Router,
-		Port:     apiConfig.Port,
+		DB:     apiConfig.DB,
+		Logger: apiConfig.Logger,
+		Router: apiConfig.Router,
+		Port:   apiConfig.Port,
 	}
 }
 
 func (s *Server) Run() {
-	setUpDbWithAutoMigrate(s.DbConfig)
+	runAutoMigrate(s.DB)
 	setUpMiddleware(s.Router)
 
-	s.Router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello World"))
+	handler := handlers.NewHandler(&handlers.Handler{
+		DB:     s.DB,
+		Logger: s.Logger,
+		Router: s.Router,
 	})
+
+	handler.CreateRoutes()
 
 	s.Logger.Info("Server started on port " + s.Port)
 	http.ListenAndServe(":"+s.Port, s.Router)
 }
 
-func setUpDbWithAutoMigrate(dbConfig *db.DbConfig) {
-	db, err := db.NewPgDB(*dbConfig).Init()
-	if err != nil {
-		panic(err)
-	}
-
+func runAutoMigrate(db *gorm.DB) {
 	models := []interface{}{
 		&models.User{},
 	}
 
-	db.AutoMigrate(models...)
+	if err := db.AutoMigrate(models...); err != nil {
+		panic(err)
+	}
 }
 
 func setUpMiddleware(r *chi.Mux) {

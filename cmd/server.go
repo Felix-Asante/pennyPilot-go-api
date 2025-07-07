@@ -24,11 +24,16 @@ func main() {
 		DbPort:     env.GetEnv("DB_PORT"),
 	}
 
+	db, err := db.NewPgDB(*dbConfig).Init()
+	if err != nil {
+		panic(err)
+	}
+
 	apiConfig := &api.Server{
-		Router:   chi.NewRouter(),
-		DbConfig: dbConfig,
-		Logger:   logger,
-		Port:     env.GetEnv("PORT"),
+		Router: chi.NewRouter(),
+		DB:     db,
+		Logger: logger,
+		Port:   env.GetEnv("PORT"),
 	}
 
 	server := api.Init(apiConfig)
