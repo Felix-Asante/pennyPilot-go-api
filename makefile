@@ -1,2 +1,5 @@
 start:
-		go run ./src/main.go
+		go run ./cmd/api/main.go
+
+migrate:
+		go run ./pkg/db/migration.go
