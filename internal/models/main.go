@@ -1,10 +1,13 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"github.com/Felix-Asante/pennyPilot-go-api/internal/dto"
+	"gorm.io/gorm"
+)
 
 type Models struct {
 	Users interface {
-		Create(*User) error
+		Create(*dto.CreateUserDto) (*User, error)
 		GetUserByEmail(string) (*User, error)
 	}
 }

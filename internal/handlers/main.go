@@ -25,6 +25,7 @@ func NewHandler(config *Handler) *Handler {
 }
 
 func (h *Handler) CreateRoutes() {
+	initValidator()
 	h.Router.Route("/api/v1", func(r chi.Router) {
 
 		// user routes

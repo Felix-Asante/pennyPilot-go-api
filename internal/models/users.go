@@ -1,6 +1,9 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"github.com/Felix-Asante/pennyPilot-go-api/internal/dto"
+	"gorm.io/gorm"
+)
 
 type User struct {
 	ID           string `gorm:"type:uuid;primaryKey;column:id;index"`
@@ -20,8 +23,16 @@ func NewUserModel(db *gorm.DB) *UserModel {
 	return &UserModel{DB: db}
 }
 
-func (um *UserModel) Create(user *User) error {
-	return um.DB.Create(user).Error
+func (um *UserModel) Create(data *dto.CreateUserDto) (*User, error) {
+	user := User{
+		Email:        data.Email,
+		FullName:     data.FullName,
+		PasswordHash: data.Password,
+		Currency:     data.Currency,
+	}
+
+	err := um.DB.Create(&user).Error
+	return &user, err
 }
 
 func (um *UserModel) GetUserByEmail(email string) (*User, error) {
