@@ -8,6 +8,7 @@ import (
 	"github.com/Felix-Asante/pennyPilot-go-api/pkg/db"
 	"github.com/Felix-Asante/pennyPilot-go-api/pkg/env"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth/v5"
 )
 
 func main() {
@@ -24,6 +25,8 @@ func main() {
 		DbPort:     env.GetEnv("DB_PORT"),
 	}
 
+	jwtAuth := jwtauth.New("HS256", env.GetEnv("JWT_SECRET"), nil)
+
 	db, err := db.NewPgDB(*dbConfig).Init()
 	if err != nil {
 		panic(err)
@@ -34,6 +37,7 @@ func main() {
 		DB:     db,
 		Logger: logger,
 		Port:   env.GetEnv("PORT"),
+		JWTAuth: jwtAuth,
 	}
 
 	server := api.Init(apiConfig)

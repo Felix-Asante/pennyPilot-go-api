@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+
+	customErrors "github.com/Felix-Asante/pennyPilot-go-api/internal/errors"
 )
 
 func (h *Handler) internalServerError(w http.ResponseWriter, r *http.Request, err error) {
@@ -16,10 +18,17 @@ func (h *Handler) forbiddenResponse(w http.ResponseWriter, r *http.Request) {
 	writeJSONError(w, http.StatusForbidden, "forbidden")
 }
 
+
+
 func (h *Handler) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
 	h.Logger.Warn("bad request", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
-	writeJSONError(w, http.StatusBadRequest, err.Error())
+	if mapErr, ok := err.(*customErrors.MapError); ok {
+		writeJSONError(w, http.StatusBadRequest, mapErr.Errors)
+		return
+	}
+
+	writeJSONError(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 }
 
 func (h *Handler) conflictResponse(w http.ResponseWriter, r *http.Request, err error) {

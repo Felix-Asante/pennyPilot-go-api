@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httprate"
+	"github.com/go-chi/jwtauth/v5"
 	"gorm.io/gorm"
 )
 
@@ -19,6 +20,7 @@ type Server struct {
 	Logger *slog.Logger
 	Router *chi.Mux
 	Port   string
+	JWTAuth *jwtauth.JWTAuth
 }
 
 func Init(apiConfig *Server) *Server {
@@ -39,6 +41,7 @@ func (s *Server) Run() {
 		Logger: s.Logger,
 		Router: s.Router,
 		Models: models.NewModels(s.DB),
+		JWTAuth: s.JWTAuth,
 	})
 
 	handler.CreateRoutes()

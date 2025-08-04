@@ -5,6 +5,11 @@ import (
 	"net/http"
 
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/dto"
+	customErrors "github.com/Felix-Asante/pennyPilot-go-api/internal/errors"
+	"github.com/Felix-Asante/pennyPilot-go-api/internal/models"
+	"github.com/go-chi/jwtauth/v5"
+	"github.com/go-playground/validator/v10"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
@@ -16,7 +21,9 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Validate.Struct(createUserDto); err != nil {
-		h.badRequestResponse(w, r, err)
+		errs := err.(validator.ValidationErrors)
+		
+		h.badRequestResponse(w, r, customErrors.NewMapErrorFromValidation(errs, trans))
 		return
 	}
 
@@ -31,6 +38,15 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(createUserDto.Password), bcrypt.DefaultCost)
+
+	if err != nil {
+		h.internalServerError(w, r, err)
+		return
+	}
+
+	createUserDto.Password = string(hashedPassword)
+
 	user, err = h.Models.Users.Create(&createUserDto)
 	if err != nil {
 		h.internalServerError(w, r, err)
@@ -40,7 +56,24 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, user)
 }
 
-func (h *Handler) getMe(w http.ResponseWriter, r *http.Request) {
 
-	w.Write([]byte("get me"))
+func (h *Handler) getCurrentUser(r *http.Request) (*models.User, error){
+	_,claims,err := jwtauth.FromContext(r.Context())
+	if err != nil {
+		h.Logger.Error("Missing or invalid token", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+		return nil, err
+	}
+
+	userId := claims["email"].(string)
+	user, err := h.Models.Users.GetUserByEmail(userId)
+	if err != nil {
+		h.Logger.Error("internal error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+		return nil, err
+	}
+
+	if user == nil {
+		h.Logger.Error("user not found", "method", r.Method, "path", r.URL.Path)
+		return nil, errors.New("user not found")
+	}
+	return user, nil
 }
