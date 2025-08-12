@@ -29,13 +29,21 @@ func NewHandler(config *Handler) *Handler {
 
 func (h *Handler) CreateRoutes() {
 	initValidator()
+
+		
 	h.Router.Route("/api/v1", func(r chi.Router) {
 
-		// user routes
+		// protected routes
+		r.Group(func(r chi.Router) {
+			r.Use(jwtauth.Verifier(h.JWTAuth))
+			r.Get("/auth/me", h.getMe)
+		})
+
+
+		// public routes
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/register", h.createUser)
 			r.Post("/login", h.login)
-			r.Get("/me", h.getMe)
 		})
 	})
 }

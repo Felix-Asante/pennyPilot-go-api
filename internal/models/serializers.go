@@ -11,7 +11,7 @@ type UserSerializer struct {
 	UpdatedAt    string  `json:"updated_at"`
 }
 
-func NewUserSerializer(user *User) *UserSerializer {
+func SerializeUser(user *User) *UserSerializer {
 	return &UserSerializer{
 		ID:           user.ID,
 		Email:        user.Email,

@@ -54,7 +54,7 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, models.NewUserSerializer(user))
+	writeJSON(w, http.StatusCreated, models.SerializeUser(user))
 }
 
 

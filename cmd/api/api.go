@@ -7,6 +7,7 @@ import (
 
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/handlers"
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/models"
+	"github.com/Felix-Asante/pennyPilot-go-api/pkg/env"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -29,6 +30,7 @@ func Init(apiConfig *Server) *Server {
 		Logger: apiConfig.Logger,
 		Router: apiConfig.Router,
 		Port:   apiConfig.Port,
+		JWTAuth: jwtauth.New("HS256", []byte(env.GetEnv("JWT_SECRET")), nil),
 	}
 }
 
