@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +30,7 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.Models.Users.GetUserByEmail(createUserDto.Email)
 
-	if err != nil {
+	if err != nil && err != gorm.ErrRecordNotFound {
 		h.internalServerError(w, r, err)
 		return
 	}
@@ -53,7 +54,7 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, user)
+	writeJSON(w, http.StatusCreated, models.NewUserSerializer(user))
 }
 
 

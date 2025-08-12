@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/dto"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -29,6 +30,7 @@ func (um *UserModel) Create(data *dto.CreateUserDto) (*User, error) {
 		FullName:     data.FullName,
 		PasswordHash: data.Password,
 		Currency:     data.Currency,
+		ID:           uuid.New().String(),
 	}
 
 	err := um.DB.Create(&user).Error
