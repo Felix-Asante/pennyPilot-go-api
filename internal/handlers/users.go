@@ -66,12 +66,12 @@ func (h *Handler) getCurrentUser(r *http.Request) (*models.User, error) {
 
 	userId := claims["email"].(string)
 	user, err := h.Models.Users.GetUserByEmail(userId)
-	if err != nil {
+	if err != nil && err != gorm.ErrRecordNotFound {
 		h.Logger.Error("internal error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 		return nil, err
 	}
 
-	if user == nil {
+	if user == nil || err == gorm.ErrRecordNotFound {
 		h.Logger.Error("user not found", "method", r.Method, "path", r.URL.Path)
 		return nil, errors.New("user not found")
 	}

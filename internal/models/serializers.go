@@ -1,7 +1,5 @@
 package models
 
-import "time"
-
 type UserSerializer struct {
 	ID        string `json:"id"`
 	Email     string `json:"email"`
@@ -17,7 +15,7 @@ func SerializeUser(user *User) *UserSerializer {
 		Email:     user.Email,
 		FullName:  user.FullName,
 		Currency:  user.Currency,
-		CreatedAt: time.Unix(user.CreatedAt, 0).Format("2006-01-02 15:04:05"),
-		UpdatedAt: time.Unix(user.UpdatedAt, 0).Format("2006-01-02 15:04:05"),
+		CreatedAt: user.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt: user.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
 }
