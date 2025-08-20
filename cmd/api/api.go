@@ -3,15 +3,14 @@ package api
 import (
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/handlers"
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/models"
+	"github.com/Felix-Asante/pennyPilot-go-api/internal/utils"
 	"github.com/Felix-Asante/pennyPilot-go-api/pkg/env"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/httprate"
 	"github.com/go-chi/jwtauth/v5"
 	"gorm.io/gorm"
 )
@@ -37,6 +36,7 @@ func Init(apiConfig *Server) *Server {
 func (s *Server) Run() {
 	runMigrations(s.DB)
 	setUpMiddleware(s.Router)
+	utils.InitializeValidator()
 
 	handler := handlers.NewHandler(&handlers.Handler{
 		DB:      s.DB,
@@ -64,7 +64,7 @@ func runMigrations(db *gorm.DB) {
 
 func setUpMiddleware(r *chi.Mux) {
 	r.Use(r.Middlewares()...)
-	r.Use(httprate.LimitByIP(10, 1*time.Minute))
+	r.Use(middleware.RealIP)
 	r.Use(middleware.AllowContentType("application/json", "multipart/form-data", "text/xml"))
 	r.Use(middleware.CleanPath)
 	r.Use(cors.Handler(cors.Options{

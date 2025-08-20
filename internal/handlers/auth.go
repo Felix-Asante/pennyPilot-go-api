@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/dto"
+	customErrors "github.com/Felix-Asante/pennyPilot-go-api/internal/errors"
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/models"
+	"github.com/Felix-Asante/pennyPilot-go-api/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -15,12 +17,7 @@ import (
 func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	var loginDto dto.LoginDto
 
-	if err := readJSON(w, r, &loginDto); err != nil {
-		h.badRequestResponse(w, r, err)
-		return
-	}
-
-	if err := Validate.Struct(loginDto); err != nil {
+	if err := utils.ReadAndValidateJSON(w, r, &loginDto); err != nil {
 		h.badRequestResponse(w, r, err)
 		return
 	}
@@ -64,7 +61,7 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 
 	defer ctx.Done()
 
-	writeJSON(w, http.StatusOK, response)
+	utils.WriteJSON(w, http.StatusOK, response)
 }
 
 func (h *Handler) getMe(w http.ResponseWriter, r *http.Request) {
@@ -74,5 +71,26 @@ func (h *Handler) getMe(w http.ResponseWriter, r *http.Request) {
 		h.unauthorizedErrorResponse(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, models.SerializeUser(user))
+	utils.WriteJSON(w, http.StatusOK, models.SerializeUser(user))
+}
+
+func (h *Handler) forgotPassword(w http.ResponseWriter, r *http.Request) {
+	var forgotPasswordDto dto.ForgotPasswordDto
+
+	if err := utils.ReadAndValidateJSON(w, r, &forgotPasswordDto); err != nil {
+		h.badRequestResponse(w, r, err)
+		return
+	}
+
+	user, err := h.Models.Users.GetUserByEmail(forgotPasswordDto.Email)
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		h.internalServerError(w, r, err)
+		return
+	}
+
+	if user == nil {
+		utils.WriteJSON(w, http.StatusOK, map[string]string{"message": customErrors.RESET_PASSWORD_LINK_SENT})
+		return
+	}
 }

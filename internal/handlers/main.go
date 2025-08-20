@@ -31,7 +31,6 @@ func NewHandler(config *Handler) *Handler {
 }
 
 func (h *Handler) CreateRoutes() {
-	initValidator()
 
 	h.Router.Route("/api/v1", func(r chi.Router) {
 
@@ -46,6 +45,7 @@ func (h *Handler) CreateRoutes() {
 				}),
 			))
 			r.Get("/auth/me", h.getMe)
+			r.Post("/auth/forgot-password", h.forgotPassword)
 		})
 
 		// public routes

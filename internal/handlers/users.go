@@ -5,10 +5,9 @@ import (
 	"net/http"
 
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/dto"
-	customErrors "github.com/Felix-Asante/pennyPilot-go-api/internal/errors"
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/models"
+	"github.com/Felix-Asante/pennyPilot-go-api/internal/utils"
 	"github.com/go-chi/jwtauth/v5"
-	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -16,15 +15,8 @@ import (
 func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 	var createUserDto dto.CreateUserDto
 
-	if err := readJSON(w, r, &createUserDto); err != nil {
+	if err := utils.ReadAndValidateJSON(w, r, &createUserDto); err != nil {
 		h.badRequestResponse(w, r, err)
-		return
-	}
-
-	if err := Validate.Struct(createUserDto); err != nil {
-		errs := err.(validator.ValidationErrors)
-
-		h.badRequestResponse(w, r, customErrors.NewMapErrorFromValidation(errs, trans))
 		return
 	}
 
@@ -54,7 +46,7 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, models.SerializeUser(user))
+	utils.WriteJSON(w, http.StatusCreated, models.SerializeUser(user))
 }
 
 func (h *Handler) getCurrentUser(r *http.Request) (*models.User, error) {
