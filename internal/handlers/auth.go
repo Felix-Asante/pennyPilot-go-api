@@ -48,7 +48,7 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 		"iat":     time.Now().Unix(),
 	}
-	
+
 	_, tokenString, err := h.JWTAuth.Encode(claims)
 	if err != nil {
 		h.internalServerError(w, r, err)
@@ -56,14 +56,14 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"user": models.SerializeUser(user),
+		"user":         models.SerializeUser(user),
 		"access_token": tokenString,
 	}
 
 	ctx := context.WithValue(r.Context(), "claims", claims)
 
 	defer ctx.Done()
-	
+
 	writeJSON(w, http.StatusOK, response)
 }
 

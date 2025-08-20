@@ -44,4 +44,3 @@ func (um *UserModel) GetUserByEmail(email string) (*User, error) {
 	}
 	return &user, nil
 }
-

@@ -33,10 +33,10 @@ func main() {
 	}
 
 	apiConfig := &api.Server{
-		Router: chi.NewRouter(),
-		DB:     db,
-		Logger: logger,
-		Port:   env.GetEnv("PORT"),
+		Router:  chi.NewRouter(),
+		DB:      db,
+		Logger:  logger,
+		Port:    env.GetEnv("PORT"),
 		JWTAuth: jwtAuth,
 	}
 

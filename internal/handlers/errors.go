@@ -18,8 +18,6 @@ func (h *Handler) forbiddenResponse(w http.ResponseWriter, r *http.Request) {
 	writeJSONError(w, http.StatusForbidden, map[string]string{"message": "forbidden"})
 }
 
-
-
 func (h *Handler) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
 	h.Logger.Warn("bad request", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 

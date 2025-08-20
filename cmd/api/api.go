@@ -17,19 +17,19 @@ import (
 )
 
 type Server struct {
-	DB     *gorm.DB
-	Logger *slog.Logger
-	Router *chi.Mux
-	Port   string
+	DB      *gorm.DB
+	Logger  *slog.Logger
+	Router  *chi.Mux
+	Port    string
 	JWTAuth *jwtauth.JWTAuth
 }
 
 func Init(apiConfig *Server) *Server {
 	return &Server{
-		DB:     apiConfig.DB,
-		Logger: apiConfig.Logger,
-		Router: apiConfig.Router,
-		Port:   apiConfig.Port,
+		DB:      apiConfig.DB,
+		Logger:  apiConfig.Logger,
+		Router:  apiConfig.Router,
+		Port:    apiConfig.Port,
 		JWTAuth: jwtauth.New("HS256", []byte(env.GetEnv("JWT_SECRET")), nil),
 	}
 }
@@ -39,10 +39,10 @@ func (s *Server) Run() {
 	setUpMiddleware(s.Router)
 
 	handler := handlers.NewHandler(&handlers.Handler{
-		DB:     s.DB,
-		Logger: s.Logger,
-		Router: s.Router,
-		Models: models.NewModels(s.DB),
+		DB:      s.DB,
+		Logger:  s.Logger,
+		Router:  s.Router,
+		Models:  models.NewModels(s.DB),
 		JWTAuth: s.JWTAuth,
 	})
 

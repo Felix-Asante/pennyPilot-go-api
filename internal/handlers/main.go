@@ -10,19 +10,19 @@ import (
 )
 
 type Handler struct {
-	DB     *gorm.DB
-	Logger *slog.Logger
-	Router *chi.Mux
-	Models *models.Models
+	DB      *gorm.DB
+	Logger  *slog.Logger
+	Router  *chi.Mux
+	Models  *models.Models
 	JWTAuth *jwtauth.JWTAuth
 }
 
 func NewHandler(config *Handler) *Handler {
 	return &Handler{
-		DB:     config.DB,
-		Logger: config.Logger,
-		Router: config.Router,
-		Models: config.Models,
+		DB:      config.DB,
+		Logger:  config.Logger,
+		Router:  config.Router,
+		Models:  config.Models,
 		JWTAuth: config.JWTAuth,
 	}
 }
@@ -30,7 +30,6 @@ func NewHandler(config *Handler) *Handler {
 func (h *Handler) CreateRoutes() {
 	initValidator()
 
-		
 	h.Router.Route("/api/v1", func(r chi.Router) {
 
 		// protected routes
@@ -38,7 +37,6 @@ func (h *Handler) CreateRoutes() {
 			r.Use(jwtauth.Verifier(h.JWTAuth))
 			r.Get("/auth/me", h.getMe)
 		})
-
 
 		// public routes
 		r.Route("/auth", func(r chi.Router) {

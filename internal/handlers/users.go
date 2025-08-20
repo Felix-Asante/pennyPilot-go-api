@@ -23,7 +23,7 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 
 	if err := Validate.Struct(createUserDto); err != nil {
 		errs := err.(validator.ValidationErrors)
-		
+
 		h.badRequestResponse(w, r, customErrors.NewMapErrorFromValidation(errs, trans))
 		return
 	}
@@ -57,9 +57,8 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, models.SerializeUser(user))
 }
 
-
-func (h *Handler) getCurrentUser(r *http.Request) (*models.User, error){
-	_,claims,err := jwtauth.FromContext(r.Context())
+func (h *Handler) getCurrentUser(r *http.Request) (*models.User, error) {
+	_, claims, err := jwtauth.FromContext(r.Context())
 	if err != nil {
 		h.Logger.Error("Missing or invalid token", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 		return nil, err
