@@ -2,31 +2,31 @@ package handlers
 
 import (
 	"log/slog"
-	"net/http"
-	"time"
 
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/models"
+	"github.com/Felix-Asante/pennyPilot-go-api/internal/notifications"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/httprate"
 	"github.com/go-chi/jwtauth/v5"
 	"gorm.io/gorm"
 )
 
 type Handler struct {
-	DB      *gorm.DB
-	Logger  *slog.Logger
-	Router  *chi.Mux
-	Models  *models.Models
-	JWTAuth *jwtauth.JWTAuth
+	DB            *gorm.DB
+	Logger        *slog.Logger
+	Router        *chi.Mux
+	Models        *models.Models
+	JWTAuth       *jwtauth.JWTAuth
+	Notifications *notifications.NotificationService
 }
 
 func NewHandler(config *Handler) *Handler {
 	return &Handler{
-		DB:      config.DB,
-		Logger:  config.Logger,
-		Router:  config.Router,
-		Models:  config.Models,
-		JWTAuth: config.JWTAuth,
+		DB:            config.DB,
+		Logger:        config.Logger,
+		Router:        config.Router,
+		Models:        config.Models,
+		JWTAuth:       config.JWTAuth,
+		Notifications: config.Notifications,
 	}
 }
 
@@ -37,15 +37,8 @@ func (h *Handler) CreateRoutes() {
 		// protected routes
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(h.JWTAuth))
-			r.Use(httprate.Limit(
-				5,
-				time.Minute,
-				httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
-					h.rateLimitExceededResponse(w, r, "1 minute")
-				}),
-			))
-			r.Get("/auth/me", h.getMe)
 			r.Post("/auth/forgot-password", h.forgotPassword)
+			r.Get("/auth/me", h.getMe)
 		})
 
 		// public routes

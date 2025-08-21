@@ -16,6 +16,7 @@ type User struct {
 	Currency     string    `gorm:"column:currency"`
 	CreatedAt    time.Time `gorm:"autoCreateTime"`
 	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
+	Codes        []Code    `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 type UserModel struct {

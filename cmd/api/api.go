@@ -6,6 +6,7 @@ import (
 
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/handlers"
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/models"
+	"github.com/Felix-Asante/pennyPilot-go-api/internal/notifications"
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/utils"
 	"github.com/Felix-Asante/pennyPilot-go-api/pkg/env"
 	"github.com/go-chi/chi/v5"
@@ -16,20 +17,22 @@ import (
 )
 
 type Server struct {
-	DB      *gorm.DB
-	Logger  *slog.Logger
-	Router  *chi.Mux
-	Port    string
-	JWTAuth *jwtauth.JWTAuth
+	DB            *gorm.DB
+	Logger        *slog.Logger
+	Router        *chi.Mux
+	Port          string
+	JWTAuth       *jwtauth.JWTAuth
+	Notifications *notifications.NotificationService
 }
 
 func Init(apiConfig *Server) *Server {
 	return &Server{
-		DB:      apiConfig.DB,
-		Logger:  apiConfig.Logger,
-		Router:  apiConfig.Router,
-		Port:    apiConfig.Port,
-		JWTAuth: jwtauth.New("HS256", []byte(env.GetEnv("JWT_SECRET")), nil),
+		DB:            apiConfig.DB,
+		Logger:        apiConfig.Logger,
+		Router:        apiConfig.Router,
+		Port:          apiConfig.Port,
+		JWTAuth:       jwtauth.New("HS256", []byte(env.GetEnv("JWT_SECRET")), nil),
+		Notifications: apiConfig.Notifications,
 	}
 }
 
@@ -39,11 +42,12 @@ func (s *Server) Run() {
 	utils.InitializeValidator()
 
 	handler := handlers.NewHandler(&handlers.Handler{
-		DB:      s.DB,
-		Logger:  s.Logger,
-		Router:  s.Router,
-		Models:  models.NewModels(s.DB),
-		JWTAuth: s.JWTAuth,
+		DB:            s.DB,
+		Logger:        s.Logger,
+		Router:        s.Router,
+		Models:        models.NewModels(s.DB),
+		JWTAuth:       s.JWTAuth,
+		Notifications: s.Notifications,
 	})
 
 	handler.CreateRoutes()
@@ -55,6 +59,7 @@ func (s *Server) Run() {
 func runMigrations(db *gorm.DB) {
 	models := []interface{}{
 		&models.User{},
+		&models.Code{},
 	}
 
 	if err := db.AutoMigrate(models...); err != nil {

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/Felix-Asante/pennyPilot-go-api/cmd/api"
+	"github.com/Felix-Asante/pennyPilot-go-api/internal/notifications"
 	"github.com/Felix-Asante/pennyPilot-go-api/pkg/db"
 	"github.com/Felix-Asante/pennyPilot-go-api/pkg/env"
 	"github.com/go-chi/chi/v5"
@@ -32,12 +33,22 @@ func main() {
 		panic(err)
 	}
 
+	mailer, err := notifications.NewMailTrapClient(env.GetEnv("MAILTRAP_API_KEY"), env.GetEnv("MAILTRAP_FROM_EMAIL"))
+	if err != nil {
+		panic(err)
+	}
+
+	notificationsConfig := notifications.NewNotificationService(&notifications.NotificationService{
+		Mailer: mailer,
+	})
+
 	apiConfig := &api.Server{
-		Router:  chi.NewRouter(),
-		DB:      db,
-		Logger:  logger,
-		Port:    env.GetEnv("PORT"),
-		JWTAuth: jwtAuth,
+		Router:        chi.NewRouter(),
+		DB:            db,
+		Logger:        logger,
+		Port:          env.GetEnv("PORT"),
+		JWTAuth:       jwtAuth,
+		Notifications: notificationsConfig,
 	}
 
 	server := api.Init(apiConfig)
