@@ -38,6 +38,7 @@ func (h *Handler) CreateRoutes() {
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(h.JWTAuth))
 			r.Post("/auth/forgot-password", h.forgotPassword)
+			r.Post("/auth/reset-password", h.resetPassword)
 			r.Get("/auth/me", h.getMe)
 		})
 

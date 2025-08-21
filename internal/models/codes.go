@@ -57,6 +57,22 @@ func (cm *CodeModel) GetByCodeAndType(code string, codeType utils.CodeType) (*Co
 	return &existingCode, nil
 }
 
+func (cm *CodeModel) GetByUserIDAndType(userID string, codeType utils.CodeType) (*Code, error) {
+	var existingCode Code
+	if err := cm.DB.Where("user_id = ? AND type = ?", userID, codeType).First(&existingCode).Error; err != nil {
+		return nil, err
+	}
+	return &existingCode, nil
+}
+
+func (cm *CodeModel) GetUnusedByUserIDAndType(userID string, codeType utils.CodeType) (*Code, error) {
+	var existingCode Code
+	if err := cm.DB.Where("user_id = ? AND type = ? AND used = ?", userID, codeType, false).First(&existingCode).Error; err != nil {
+		return nil, err
+	}
+	return &existingCode, nil
+}
+
 func (cm *CodeModel) Save(code *Code) error {
 	return cm.DB.Save(code).Error
 }

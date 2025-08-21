@@ -47,3 +47,7 @@ func (um *UserModel) GetUserByEmail(email string) (*User, error) {
 	}
 	return &user, nil
 }
+
+func (um *UserModel) Save(user *User) error {
+	return um.DB.Save(user).Error
+}

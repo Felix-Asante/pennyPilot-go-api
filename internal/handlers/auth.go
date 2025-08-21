@@ -110,6 +110,7 @@ func (h *Handler) forgotPassword(w http.ResponseWriter, r *http.Request) {
 		h.internalServerError(w, r, err)
 		return
 	}
+	fmt.Println(token)
 	// hash token with bcrypt
 	hashedToken, err := utils.HashString(token)
 	if err != nil {
@@ -144,4 +145,67 @@ func (h *Handler) forgotPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": customErrors.RESET_PASSWORD_LINK_SENT})
+}
+
+func (h *Handler) resetPassword(w http.ResponseWriter, r *http.Request) {
+	var resetPasswordDto dto.ResetPasswordDto
+
+	if err := utils.ReadAndValidateJSON(w, r, &resetPasswordDto); err != nil {
+		h.badRequestResponse(w, r, err)
+		return
+	}
+
+	user, err := h.Models.Users.GetUserByEmail(resetPasswordDto.Email)
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		h.internalServerError(w, r, err)
+		return
+	}
+
+	if user == nil || err == gorm.ErrRecordNotFound {
+		h.notFoundResponse(w, r, errors.New(customErrors.NO_USER_WITH_EMAIL_FOUND))
+		return
+	}
+
+	code, err := h.Models.Code.GetUnusedByUserIDAndType(user.ID, utils.CodeTypeForgotPassword)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		h.internalServerError(w, r, err)
+		return
+	}
+
+	if code == nil || err == gorm.ErrRecordNotFound {
+		h.notFoundResponse(w, r, errors.New(customErrors.NO_RESET_PASSWORD_TOKEN))
+		return
+	}
+
+	if utils.HasPassedMinutesAgo(*code.ExpiresAt, 30) {
+		h.unauthorizedErrorResponse(w, r, errors.New(customErrors.TOKEN_EXPIRED))
+		return
+	}
+
+	if err := utils.CompareHashedString(code.Code, resetPasswordDto.ResetToken); err != nil {
+		h.unauthorizedErrorResponse(w, r, errors.New(customErrors.INVALID_TOKEN))
+		return
+	}
+
+	hashedPassword, err := utils.HashString(resetPasswordDto.NewPassword)
+
+	if err != nil {
+		h.internalServerError(w, r, err)
+		return
+	}
+	user.PasswordHash = hashedPassword
+	if err = h.Models.Users.Save(user); err != nil {
+		h.DB.Rollback()
+		h.internalServerError(w, r, err)
+		return
+	}
+	code.Used = true
+	if err = h.Models.Code.Save(code); err != nil {
+		h.DB.Rollback()
+		h.internalServerError(w, r, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": customErrors.PASSWORD_RESET_SUCCESS})
 }
