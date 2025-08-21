@@ -8,4 +8,6 @@ const (
 	NO_RESET_PASSWORD_TOKEN  = "no reset password token found"
 	TOKEN_USED               = "token used"
 	NO_USER_WITH_EMAIL_FOUND = "no user with this email"
+	UNAUTHORIZED             = "unauthorized"
+	YOUR_ARE_NOT_AUTHORIZED  = "you are not authorized to perform this action"
 )

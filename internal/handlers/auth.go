@@ -25,7 +25,7 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.Models.Users.GetUserByEmail(loginDto.Email)
+	user, err := h.Models.Users.GetUserByEmail(loginDto.Email, nil)
 
 	if err != nil && err != gorm.ErrRecordNotFound {
 		h.internalServerError(w, r, err)
@@ -92,59 +92,61 @@ func (h *Handler) forgotPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.Models.Users.GetUserByEmail(forgotPasswordDto.Email)
+	h.DB.Transaction(func(tx *gorm.DB) error {
+		user, err := h.Models.Users.GetUserByEmail(forgotPasswordDto.Email, tx)
 
-	if err != nil && err != gorm.ErrRecordNotFound {
-		h.internalServerError(w, r, err)
-		return
-	}
+		if err != nil && err != gorm.ErrRecordNotFound {
+			h.internalServerError(w, r, err)
+			return err
+		}
 
-	if user == nil {
+		if user == nil {
+			utils.WriteJSON(w, http.StatusOK, map[string]string{"message": customErrors.RESET_PASSWORD_LINK_SENT})
+			return nil
+		}
+
+		// generate token
+		token, err := utils.GenerateRandomTokens(32)
+		if err != nil {
+			h.internalServerError(w, r, err)
+			return err
+		}
+		fmt.Println(token)
+		// hash token with bcrypt
+		hashedToken, err := utils.HashString(token)
+		if err != nil {
+			h.internalServerError(w, r, err)
+			return err
+		}
+
+		// store token in db
+		tokenExpiresAt := time.Now().Add(30 * time.Minute)
+
+		code := &models.Code{
+			Code:      hashedToken,
+			UserID:    user.ID,
+			Type:      utils.CodeTypeForgotPassword,
+			ExpiresAt: &tokenExpiresAt,
+			Used:      false,
+		}
+		if _, err = h.Models.Code.Create(code, tx); err != nil {
+			h.internalServerError(w, r, err)
+			return err
+		}
+
+		// send email with reset password link
+		resetPaswordLink := fmt.Sprintf("%s/reset-password?token=%s&email=%s", utils.GetFrontendUrl(), token, user.Email)
+		_, notificationError := h.Notifications.Mailer.Send(notifications.ForgotPasswordMessageTemplate, []string{user.Email}, "Reset Your Password - Penny Pilot", map[string]interface{}{
+			"username": user.FullName,
+			"link":     resetPaswordLink,
+		})
+		if notificationError != nil {
+			h.internalServerError(w, r, notificationError)
+			return notificationError
+		}
 		utils.WriteJSON(w, http.StatusOK, map[string]string{"message": customErrors.RESET_PASSWORD_LINK_SENT})
-		return
-	}
-
-	// generate token
-	token, err := utils.GenerateRandomTokens(32)
-	if err != nil {
-		h.internalServerError(w, r, err)
-		return
-	}
-	fmt.Println(token)
-	// hash token with bcrypt
-	hashedToken, err := utils.HashString(token)
-	if err != nil {
-		h.internalServerError(w, r, err)
-		return
-	}
-
-	// store token in db
-	tokenExpiresAt := time.Now().Add(30 * time.Minute)
-
-	code := &models.Code{
-		Code:      hashedToken,
-		UserID:    user.ID,
-		Type:      utils.CodeTypeForgotPassword,
-		ExpiresAt: &tokenExpiresAt,
-		Used:      false,
-	}
-	if _, err = h.Models.Code.Create(code); err != nil {
-		h.internalServerError(w, r, err)
-		return
-	}
-
-	// send email with reset password link
-	resetPaswordLink := fmt.Sprintf("%s/reset-password?token=%s&email=%s", utils.GetFrontendUrl(), token, user.Email)
-	_, notificationError := h.Notifications.Mailer.Send(notifications.ForgotPasswordMessageTemplate, []string{user.Email}, "Reset Your Password - Penny Pilot", map[string]interface{}{
-		"username": user.FullName,
-		"link":     resetPaswordLink,
+		return nil
 	})
-	if notificationError != nil {
-		h.internalServerError(w, r, notificationError)
-		return
-	}
-
-	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": customErrors.RESET_PASSWORD_LINK_SENT})
 }
 
 func (h *Handler) resetPassword(w http.ResponseWriter, r *http.Request) {
@@ -155,7 +157,7 @@ func (h *Handler) resetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.Models.Users.GetUserByEmail(resetPasswordDto.Email)
+	user, err := h.Models.Users.GetUserByEmail(resetPasswordDto.Email, nil)
 
 	if err != nil && err != gorm.ErrRecordNotFound {
 		h.internalServerError(w, r, err)
@@ -195,14 +197,12 @@ func (h *Handler) resetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.PasswordHash = hashedPassword
-	if err = h.Models.Users.Save(user); err != nil {
-		h.DB.Rollback()
+	if err = h.Models.Users.Save(user, nil); err != nil {
 		h.internalServerError(w, r, err)
 		return
 	}
 	code.Used = true
-	if err = h.Models.Code.Save(code); err != nil {
-		h.DB.Rollback()
+	if err = h.Models.Code.Save(code, nil); err != nil {
 		h.internalServerError(w, r, err)
 		return
 	}

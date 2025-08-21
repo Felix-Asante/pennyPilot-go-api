@@ -24,7 +24,11 @@ func NewCodeModel(db *gorm.DB) *CodeModel {
 	return &CodeModel{DB: db}
 }
 
-func (cm *CodeModel) Create(code *Code) (*Code, error) {
+func (cm *CodeModel) Create(code *Code, tx *gorm.DB) (*Code, error) {
+	if tx != nil {
+		err := tx.Create(&code).Error
+		return code, err
+	}
 	err := cm.DB.Create(&code).Error
 	return code, err
 }
@@ -37,7 +41,10 @@ func (cm *CodeModel) GetByCode(code string) (*Code, error) {
 	return &existingCode, nil
 }
 
-func (cm *CodeModel) Delete(code *Code) error {
+func (cm *CodeModel) Delete(code *Code, tx *gorm.DB) error {
+	if tx != nil {
+		return tx.Delete(code).Error
+	}
 	return cm.DB.Delete(code).Error
 }
 
@@ -73,6 +80,9 @@ func (cm *CodeModel) GetUnusedByUserIDAndType(userID string, codeType utils.Code
 	return &existingCode, nil
 }
 
-func (cm *CodeModel) Save(code *Code) error {
+func (cm *CodeModel) Save(code *Code, tx *gorm.DB) error {
+	if tx != nil {
+		return tx.Save(code).Error
+	}
 	return cm.DB.Save(code).Error
 }

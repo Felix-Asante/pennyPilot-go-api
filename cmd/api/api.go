@@ -60,6 +60,7 @@ func runMigrations(db *gorm.DB) {
 	models := []interface{}{
 		&models.User{},
 		&models.Code{},
+		&models.Income{},
 	}
 
 	if err := db.AutoMigrate(models...); err != nil {

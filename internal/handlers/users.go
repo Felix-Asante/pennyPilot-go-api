@@ -20,7 +20,7 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.Models.Users.GetUserByEmail(createUserDto.Email)
+	user, err := h.Models.Users.GetUserByEmail(createUserDto.Email, nil)
 
 	if err != nil && err != gorm.ErrRecordNotFound {
 		h.internalServerError(w, r, err)
@@ -40,7 +40,7 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 
 	createUserDto.Password = string(hashedPassword)
 
-	user, err = h.Models.Users.Create(&createUserDto)
+	user, err = h.Models.Users.Create(&createUserDto, nil)
 	if err != nil {
 		h.internalServerError(w, r, err)
 		return
@@ -57,7 +57,7 @@ func (h *Handler) getCurrentUser(r *http.Request) (*models.User, error) {
 	}
 
 	userId := claims["email"].(string)
-	user, err := h.Models.Users.GetUserByEmail(userId)
+	user, err := h.Models.Users.GetUserByEmail(userId, nil)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		h.Logger.Error("internal error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 		return nil, err

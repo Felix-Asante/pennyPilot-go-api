@@ -37,9 +37,17 @@ func (h *Handler) CreateRoutes() {
 		// protected routes
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(h.JWTAuth))
+			// auth
 			r.Post("/auth/forgot-password", h.forgotPassword)
 			r.Post("/auth/reset-password", h.resetPassword)
 			r.Get("/auth/me", h.getMe)
+
+			// income
+			r.Post("/income", h.createIncome)
+			r.Put("/income/{id}", h.updateIncome)
+
+			// users
+			r.Get("/user/income", h.getUserIncome)
 		})
 
 		// public routes
