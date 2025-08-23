@@ -8,6 +8,7 @@ import (
 type CodeType string
 type IncomeType string
 type IncomeFrequency string
+type AllocationStrategy string
 
 const (
 	CodeTypeForgotPassword CodeType = "forgot_password"
@@ -27,6 +28,11 @@ const (
 	IncomeFrequencyMonthly  IncomeFrequency = "monthly"
 	IncomeFrequencyYearly   IncomeFrequency = "yearly"
 	IncomeFrequencyOneTime  IncomeFrequency = "one-time"
+)
+
+const (
+	AllocationStrategyFixedAmount AllocationStrategy = "fixed_amount"
+	AllocationStrategyPercentage  AllocationStrategy = "percentage"
 )
 
 func (p *CodeType) Scan(value interface{}) error {
@@ -86,5 +92,25 @@ func (p *IncomeFrequency) Scan(value interface{}) error {
 }
 
 func (p IncomeFrequency) Value() (driver.Value, error) {
+	return string(p), nil
+}
+
+func (p *AllocationStrategy) Scan(value interface{}) error {
+	if value == nil {
+		*p = ""
+		return nil
+	}
+	switch v := value.(type) {
+	case []byte:
+		*p = AllocationStrategy(v)
+	case string:
+		*p = AllocationStrategy(v)
+	default:
+		return fmt.Errorf("unsupported type: %T", value)
+	}
+	return nil
+}
+
+func (p AllocationStrategy) Value() (driver.Value, error) {
 	return string(p), nil
 }

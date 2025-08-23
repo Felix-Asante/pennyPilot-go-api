@@ -32,6 +32,14 @@ type IncomeSerializer struct {
 	Frequency    utils.IncomeFrequency `json:"frequency"`
 }
 
+type AccountSerializer struct {
+	CommonFields
+	Name     string  `json:"name"`
+	Currency string  `json:"currency"`
+	IsActive bool    `json:"is_active"`
+	Balance  float64 `json:"balance"`
+}
+
 func SerializeUser(user *User) *UserSerializer {
 	return &UserSerializer{
 		ID:          user.ID,
@@ -56,5 +64,19 @@ func SerializeIncome(income *Income) *IncomeSerializer {
 		DateRecieved: income.DateRecieved,
 		Type:         income.Type,
 		Frequency:    income.Frequency,
+	}
+}
+
+func SerializeAccount(account *Account) *AccountSerializer {
+	return &AccountSerializer{
+		CommonFields: CommonFields{
+			ID:        account.ID.String(),
+			CreatedAt: account.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt: account.UpdatedAt.Format("2006-01-02 15:04:05"),
+		},
+		Name:     account.Name,
+		Currency: account.Currency,
+		IsActive: account.IsActive,
+		Balance:  account.Balance,
 	}
 }

@@ -3,3 +3,5 @@ start:
 
 migrate:
 		go run ./pkg/db/migration.go
+race:
+		go run --race ./cmd/server.go

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/models"
@@ -48,6 +49,13 @@ func (h *Handler) CreateRoutes() {
 
 			// users
 			r.Get("/user/income", h.getUserIncome)
+			r.Get("/user/accounts", h.getAccounts)
+
+			// accounts
+			r.Post("/account", h.createAccount)
+			r.Get("/account/{id}", h.getAccount)
+			r.Put("/account/{id}", h.updateAccount)
+			r.Delete("/account/{id}", h.deleteAccount)
 		})
 
 		// public routes
@@ -56,4 +64,12 @@ func (h *Handler) CreateRoutes() {
 			r.Post("/login", h.login)
 		})
 	})
+}
+
+func getUserIdFromContext(ctx context.Context) (string, error) {
+	_, claims, err := jwtauth.FromContext(ctx)
+	if err != nil {
+		return "", err
+	}
+	return claims["user_id"].(string), nil
 }

@@ -18,8 +18,9 @@ type User struct {
 	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
 	TotalIncome  float64   `gorm:"-:all"`
 
-	Codes   []Code   `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE"`
-	Incomes []Income `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE"`
+	Codes    []Code    `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE"`
+	Incomes  []Income  `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE"`
+	Accounts []Account `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 type UserModel struct {
