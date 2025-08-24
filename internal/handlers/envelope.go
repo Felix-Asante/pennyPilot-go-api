@@ -65,9 +65,18 @@ func (h *Handler) createEnvelope(w http.ResponseWriter, r *http.Request) {
 				h.badRequestResponse(w, r, errors.New("allocation strategy and value are required"))
 				return errors.New("allocation strategy and value are required")
 			}
+
+			allocationStrategy := utils.AllocationStrategy(*createEnvelopeDto.AllocationStrategy)
+			allocationValue := *createEnvelopeDto.AllocationValue
+
+			if allocationStrategy == utils.AllocationStrategyPercentage && allocationValue > 100 {
+				h.badRequestResponse(w, r, errors.New("allocation value must be less than or equal to 100"))
+				return errors.New("allocation value must be less than or equal to 100")
+			}
+
 			allocationRule.ID = uuid.New()
-			allocationRule.Strategy = utils.AllocationStrategy(*createEnvelopeDto.AllocationStrategy)
-			allocationRule.Value = *createEnvelopeDto.AllocationValue
+			allocationRule.Strategy = allocationStrategy
+			allocationRule.Value = allocationValue
 			allocationRule.TargetID = envelope.ID
 		}
 
@@ -173,6 +182,106 @@ func (h *Handler) getUserOwnedEnvelopes(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *Handler) updateEnvelope(w http.ResponseWriter, r *http.Request) {
+	envelopeID := chi.URLParam(r, "id")
+	userID, err := getUserIdFromContext(r.Context())
+
+	if err != nil {
+		h.unauthorizedErrorResponse(w, r, err)
+		return
+	}
+
+	if uuid.Validate(envelopeID) != nil || uuid.Validate(userID) != nil {
+		h.badRequestResponse(w, r, errors.New("invalid envelope ID or user ID"))
+		return
+	}
+
+	var updateEnvelopeDto dto.UpdateEnvelopeDto
+
+	if err := utils.ReadAndValidateJSON(w, r, &updateEnvelopeDto); err != nil {
+		h.badRequestResponse(w, r, err)
+		return
+	}
+
+	h.DB.Transaction(func(tx *gorm.DB) error {
+		envelope, err := h.Models.Envelope.GetByIDAndUserID(r.Context(), envelopeID, userID, nil)
+		if err != nil && err != gorm.ErrRecordNotFound {
+			h.internalServerError(w, r, err)
+			return err
+		}
+
+		if envelope == nil || err == gorm.ErrRecordNotFound {
+			h.notFoundResponse(w, r, errors.New("envelope not found"))
+			return errors.New("envelope not found")
+		}
+
+		if updateEnvelopeDto.Name != nil && len(*updateEnvelopeDto.Name) > 0 {
+			envelope.Name = *updateEnvelopeDto.Name
+		}
+
+		if updateEnvelopeDto.TargetAmount != nil {
+			envelope.TargetAmount = *updateEnvelopeDto.TargetAmount
+		}
+
+		if updateEnvelopeDto.TargetedDate != nil {
+			envelope.TargetedDate = updateEnvelopeDto.TargetedDate
+		}
+
+		if updateEnvelopeDto.IsActive != nil {
+			envelope.IsActive = *updateEnvelopeDto.IsActive
+		}
+
+		oldAllocationRule := envelope.AllocationRule
+
+		if updateEnvelopeDto.AutoAllocate != nil {
+			isAutoAllocate := *updateEnvelopeDto.AutoAllocate
+
+			envelope.AutoAllocate = isAutoAllocate
+
+			if oldAllocationRule == nil && isAutoAllocate {
+				oldAllocationRule = &models.AllocationRule{
+					ID:       uuid.New(),
+					Active:   true,
+					TargetID: envelope.ID,
+				}
+			}
+
+			if isAutoAllocate && (updateEnvelopeDto.AllocationStrategy == nil || updateEnvelopeDto.AllocationValue == nil) {
+				h.badRequestResponse(w, r, errors.New("allocation strategy and value are required"))
+				return errors.New("allocation strategy and value are required")
+			}
+
+			if updateEnvelopeDto.AllocationStrategy != nil && len(*updateEnvelopeDto.AllocationStrategy) > 0 {
+				oldAllocationRule.Strategy = utils.AllocationStrategy(*updateEnvelopeDto.AllocationStrategy)
+			}
+
+			if updateEnvelopeDto.AllocationValue != nil {
+				if oldAllocationRule.Strategy == utils.AllocationStrategyPercentage && *updateEnvelopeDto.AllocationValue > 100 {
+					h.badRequestResponse(w, r, errors.New("allocation value must be less than or equal to 100"))
+					return errors.New("allocation value must be less than or equal to 100")
+				}
+				oldAllocationRule.Value = *updateEnvelopeDto.AllocationValue
+			}
+
+			oldAllocationRule.Active = isAutoAllocate
+
+			envelope.AllocationRule = oldAllocationRule
+		}
+
+		if err := h.Models.Envelope.Save(r.Context(), envelope, nil); err != nil {
+			h.internalServerError(w, r, err)
+			return err
+		}
+
+		if oldAllocationRule != nil {
+			if err := h.Models.AllocationRule.Save(r.Context(), oldAllocationRule, nil); err != nil {
+				h.internalServerError(w, r, err)
+				return err
+			}
+		}
+
+		utils.WriteJSON(w, http.StatusOK, models.SerializeEnvelope(envelope))
+		return nil
+	})
 
 }
 
