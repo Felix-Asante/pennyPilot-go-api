@@ -65,6 +65,7 @@ func (h *Handler) createEnvelope(w http.ResponseWriter, r *http.Request) {
 				h.badRequestResponse(w, r, errors.New("allocation strategy and value are required"))
 				return errors.New("allocation strategy and value are required")
 			}
+			allocationRule.ID = uuid.New()
 			allocationRule.Strategy = utils.AllocationStrategy(*createEnvelopeDto.AllocationStrategy)
 			allocationRule.Value = *createEnvelopeDto.AllocationValue
 			allocationRule.TargetID = envelope.ID
@@ -123,7 +124,52 @@ func (h *Handler) getEnvelopes(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getEnvelope(w http.ResponseWriter, r *http.Request) {
+	envelopeID := chi.URLParam(r, "id")
+	userID, err := getUserIdFromContext(r.Context())
+	if err != nil {
+		h.unauthorizedErrorResponse(w, r, err)
+		return
+	}
 
+	if uuid.Validate(envelopeID) != nil || uuid.Validate(userID) != nil {
+		h.badRequestResponse(w, r, errors.New("invalid envelope ID or user ID"))
+		return
+	}
+
+	envelope, err := h.Models.Envelope.GetByIDAndUserID(r.Context(), envelopeID, userID, nil)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		h.internalServerError(w, r, err)
+		return
+	}
+
+	if envelope == nil || err == gorm.ErrRecordNotFound {
+		h.notFoundResponse(w, r, errors.New("envelope not found"))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, models.SerializeEnvelope(envelope))
+}
+
+func (h *Handler) getUserOwnedEnvelopes(w http.ResponseWriter, r *http.Request) {
+	userID, err := getUserIdFromContext(r.Context())
+	if err != nil {
+		h.unauthorizedErrorResponse(w, r, err)
+		return
+	}
+
+	envelopes, err := h.Models.Envelope.GetAllByUserID(r.Context(), userID, nil)
+	if err != nil {
+		h.internalServerError(w, r, err)
+		return
+	}
+
+	// improve with goroutines and channels
+	serializedEnvelopes := make([]*models.EnvelopeSerializer, len(envelopes))
+	for i, envelope := range envelopes {
+		serializedEnvelopes[i] = models.SerializeEnvelope(envelope)
+	}
+
+	utils.WriteJSON(w, http.StatusOK, serializedEnvelopes)
 }
 
 func (h *Handler) updateEnvelope(w http.ResponseWriter, r *http.Request) {

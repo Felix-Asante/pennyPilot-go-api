@@ -50,6 +50,7 @@ func (h *Handler) CreateRoutes() {
 			// users
 			r.Get("/user/income", h.getUserIncome)
 			r.Get("/user/accounts", h.getAccounts)
+			r.Get("/user/envelopes", h.getUserOwnedEnvelopes)
 
 			// accounts
 			r.Post("/account", h.createAccount)

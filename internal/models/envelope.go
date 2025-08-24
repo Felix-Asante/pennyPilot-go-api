@@ -22,6 +22,7 @@ type Envelope struct {
 	UpdatedAt     time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt     gorm.DeletedAt `gorm:"index"`
 
+	Account        Account         `gorm:"foreignKey:AccountID;references:ID"`
 	AllocationRule *AllocationRule `gorm:"foreignKey:TargetID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
@@ -105,4 +106,34 @@ func (em *EnvelopeModel) GetByNameAndAccountID(ctx context.Context, name string,
 	}
 
 	return envelope, nil
+}
+
+func (em *EnvelopeModel) GetAllByUserID(ctx context.Context, userID string, tx *gorm.DB) ([]*Envelope, error) {
+	db := getTxDB(em.db, tx)
+
+	var envelopes []*Envelope
+	err := db.Joins("JOIN accounts ON accounts.id = envelopes.account_id").
+		Where("accounts.user_id = ?", userID).
+		Preload("AllocationRule").
+		Preload("Account").
+		Find(&envelopes).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return envelopes, nil
+}
+
+func (em *EnvelopeModel) GetByIDAndUserID(ctx context.Context, id, userID string, tx *gorm.DB) (*Envelope, error) {
+	db := getTxDB(em.db, tx)
+
+	var envelope Envelope
+	err := db.Joins("JOIN accounts ON accounts.id = envelopes.account_id").
+		Where("envelopes.id = ? AND accounts.user_id = ?", id, userID).
+		Preload("AllocationRule").
+		Preload("Account").
+		First(&envelope).Error
+
+	return &envelope, err
 }

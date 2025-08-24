@@ -40,31 +40,57 @@ type AccountSerializer struct {
 	Balance  float64 `json:"balance"`
 }
 
+type AllocationRuleSerializer struct {
+	CommonFields
+	Strategy utils.AllocationStrategy `json:"strategy"`
+	Value    float64                  `json:"value"`
+	TargetID string                   `json:"target_id"`
+	Active   bool                     `json:"active"`
+}
+
 type EnvelopeSerializer struct {
 	CommonFields
-	Name          string  `json:"name"`
-	CurrentAmount float64 `json:"current_amount"`
-	TargetAmount  float64 `json:"target_amount"`
-	AutoAllocate  bool    `json:"auto_allocate"`
-	IsActive      bool    `json:"is_active"`
+	Name           string                    `json:"name"`
+	CurrentAmount  float64                   `json:"current_amount"`
+	TargetAmount   float64                   `json:"target_amount"`
+	AutoAllocate   bool                      `json:"auto_allocate"`
+	TargetedDate   string                    `json:"targeted_date"`
+	IsActive       bool                      `json:"is_active"`
+	Account        *AccountSerializer        `json:"account"`
+	AllocationRule *AllocationRuleSerializer `json:"allocation_rule"`
 }
 
 func SerializeEnvelope(envelope *Envelope) *EnvelopeSerializer {
-	return &EnvelopeSerializer{
+	if envelope == nil {
+		return nil
+	}
+
+	serializedEnvelope := EnvelopeSerializer{
 		CommonFields: CommonFields{
 			ID:        envelope.ID.String(),
 			CreatedAt: envelope.CreatedAt.Format("2006-01-02 15:04:05"),
 			UpdatedAt: envelope.UpdatedAt.Format("2006-01-02 15:04:05"),
 		},
-		Name:          envelope.Name,
-		CurrentAmount: envelope.CurrentAmount,
-		TargetAmount:  envelope.TargetAmount,
-		AutoAllocate:  envelope.AutoAllocate,
-		IsActive:      envelope.IsActive,
+		Name:           envelope.Name,
+		CurrentAmount:  envelope.CurrentAmount,
+		TargetAmount:   envelope.TargetAmount,
+		AutoAllocate:   envelope.AutoAllocate,
+		IsActive:       envelope.IsActive,
+		Account:        SerializeAccount(&envelope.Account),
+		AllocationRule: SerializeAllocationRule(envelope.AllocationRule),
 	}
+
+	if envelope.TargetedDate != nil {
+		serializedEnvelope.TargetedDate = envelope.TargetedDate.Format("2006-01-02 15:04:05")
+	}
+
+	return &serializedEnvelope
 }
 
 func SerializeUser(user *User) *UserSerializer {
+	if user == nil {
+		return nil
+	}
 	return &UserSerializer{
 		ID:          user.ID,
 		Email:       user.Email,
@@ -77,6 +103,9 @@ func SerializeUser(user *User) *UserSerializer {
 }
 
 func SerializeIncome(income *Income) *IncomeSerializer {
+	if income == nil {
+		return nil
+	}
 	return &IncomeSerializer{
 		CommonFields: CommonFields{
 			ID:        income.ID.String(),
@@ -92,6 +121,9 @@ func SerializeIncome(income *Income) *IncomeSerializer {
 }
 
 func SerializeAccount(account *Account) *AccountSerializer {
+	if account == nil {
+		return nil
+	}
 	return &AccountSerializer{
 		CommonFields: CommonFields{
 			ID:        account.ID.String(),
@@ -102,5 +134,22 @@ func SerializeAccount(account *Account) *AccountSerializer {
 		Currency: account.Currency,
 		IsActive: account.IsActive,
 		Balance:  account.Balance,
+	}
+}
+
+func SerializeAllocationRule(allocationRule *AllocationRule) *AllocationRuleSerializer {
+	if allocationRule == nil {
+		return nil
+	}
+	return &AllocationRuleSerializer{
+		CommonFields: CommonFields{
+			ID:        allocationRule.ID.String(),
+			CreatedAt: allocationRule.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt: allocationRule.UpdatedAt.Format("2006-01-02 15:04:05"),
+		},
+		Strategy: allocationRule.Strategy,
+		Value:    allocationRule.Value,
+		TargetID: allocationRule.TargetID.String(),
+		Active:   allocationRule.Active,
 	}
 }
