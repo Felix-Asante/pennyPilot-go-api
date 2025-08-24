@@ -21,6 +21,14 @@ type Income struct {
 	UpdatedAt    time.Time             `gorm:"autoUpdateTime"`
 }
 
+type IncomeBalance struct {
+	UserID      string    `gorm:"primaryKey;index"`
+	TotalIncome float64   `gorm:"column:total_income"`
+	Allocated   float64   `gorm:"column:allocated"`
+	Unallocated float64   `gorm:"column:unallocated"`
+	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
+}
+
 type IncomeModel struct {
 	DB *gorm.DB
 }
@@ -81,4 +89,25 @@ func (im *IncomeModel) GetUserTotalIncome(ctx context.Context, userId string, tx
 		Scan(&total).Error
 
 	return total, err
+}
+
+func (im *IncomeModel) SaveIncomeBalance(ctx context.Context, balance *IncomeBalance, tx *gorm.DB) error {
+	db := getTxDB(im.DB, tx)
+
+	if err := db.WithContext(ctx).Save(balance).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (im *IncomeModel) GetIncomeBalanceByUserId(ctx context.Context, userId string, tx *gorm.DB) (*IncomeBalance, error) {
+	db := getTxDB(im.DB, tx)
+
+	var balance IncomeBalance
+	if err := db.WithContext(ctx).Where("user_id = ?", userId).First(&balance).Error; err != nil {
+		return nil, err
+	}
+
+	return &balance, nil
 }

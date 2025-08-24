@@ -62,6 +62,7 @@ func runMigrations(db *gorm.DB) {
 		&models.Code{},
 		&models.Income{},
 		&models.Account{},
+		&models.IncomeBalance{},
 		&models.Envelope{},
 		&models.AllocationRule{},
 	}

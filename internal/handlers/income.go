@@ -24,7 +24,7 @@ func (h *Handler) createIncome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.getCurrentUser(r)
+	userId, err := getUserIdFromContext(r.Context())
 	if err != nil {
 		h.unauthorizedErrorResponse(w, r, err)
 		return
@@ -32,7 +32,7 @@ func (h *Handler) createIncome(w http.ResponseWriter, r *http.Request) {
 
 	income := &models.Income{
 		ID:           uuid.New(),
-		UserID:       user.ID,
+		UserID:       userId,
 		Amount:       incomeDto.Amount,
 		Category:     incomeDto.Category,
 		DateRecieved: incomeDto.DateRecieved,
@@ -40,14 +40,40 @@ func (h *Handler) createIncome(w http.ResponseWriter, r *http.Request) {
 		Frequency:    incomeDto.Frequency,
 	}
 
-	savedIncome, err := h.Models.Income.Create(income, nil)
+	h.DB.Transaction(func(tx *gorm.DB) error {
+		userIncomeBalance, balanceError := h.Models.Income.GetIncomeBalanceByUserId(r.Context(), userId, tx)
 
-	if err != nil {
-		h.internalServerError(w, r, err)
-		return
-	}
+		if balanceError != nil && balanceError != gorm.ErrRecordNotFound {
+			h.internalServerError(w, r, balanceError)
+			return balanceError
+		}
 
-	utils.WriteJSON(w, http.StatusCreated, models.SerializeIncome(savedIncome))
+		if userIncomeBalance == nil || balanceError == gorm.ErrRecordNotFound {
+			userIncomeBalance = &models.IncomeBalance{
+				UserID:      userId,
+				TotalIncome: incomeDto.Amount,
+				Allocated:   0,
+				Unallocated: incomeDto.Amount,
+			}
+		} else {
+			userIncomeBalance.TotalIncome += incomeDto.Amount
+			userIncomeBalance.Unallocated += incomeDto.Amount
+		}
+
+		savedIncome, err := h.Models.Income.Create(income, tx)
+
+		if err != nil {
+			h.internalServerError(w, r, err)
+			return err
+		}
+
+		if err := h.Models.Income.SaveIncomeBalance(r.Context(), userIncomeBalance, tx); err != nil {
+			return err
+		}
+
+		utils.WriteJSON(w, http.StatusCreated, models.SerializeIncome(savedIncome))
+		return nil
+	})
 }
 
 func (h *Handler) getUserIncome(w http.ResponseWriter, r *http.Request) {
@@ -158,15 +184,20 @@ func (h *Handler) transferIncomeToAccount(w http.ResponseWriter, r *http.Request
 	}
 
 	totalTransferAmount := transferDto.Amount * float64(len(transferDto.Accounts))
-	totalIncome, err := h.Models.Income.GetUserTotalIncome(r.Context(), userID, nil)
+	incomeBalance, err := h.Models.Income.GetIncomeBalanceByUserId(r.Context(), userID, nil)
 
 	if err != nil {
 		h.internalServerError(w, r, err)
 		return
 	}
 
-	if totalIncome < totalTransferAmount {
-		h.badRequestResponse(w, r, errors.New("not enough income to transfer"))
+	if incomeBalance == nil {
+		h.notFoundResponse(w, r, errors.New("Insufficient balance"))
+		return
+	}
+
+	if incomeBalance.Unallocated < totalTransferAmount {
+		h.badRequestResponse(w, r, errors.New("Insufficient balance"))
 		return
 	}
 
@@ -205,6 +236,14 @@ func (h *Handler) moveIncomeToAccountWorker(ctx context.Context, userId, account
 	default:
 
 		return h.DB.Transaction(func(tx *gorm.DB) error {
+			incomeBalance, err := h.Models.Income.GetIncomeBalanceByUserId(ctx, userId, tx)
+			if err != nil {
+				return err
+			}
+
+			if incomeBalance == nil {
+				return errors.New("Insufficient balance")
+			}
 
 			account, err := h.Models.Account.GetByIDAndUserID(ctx, accountId, userId, tx)
 			if err != nil {
@@ -221,7 +260,12 @@ func (h *Handler) moveIncomeToAccountWorker(ctx context.Context, userId, account
 				return err
 			}
 
-			// record transfer to calculate remaining income balance
+			incomeBalance.Unallocated -= amount
+			incomeBalance.Allocated += amount
+
+			if err := h.Models.Income.SaveIncomeBalance(ctx, incomeBalance, tx); err != nil {
+				return err
+			}
 
 			return nil
 		})
