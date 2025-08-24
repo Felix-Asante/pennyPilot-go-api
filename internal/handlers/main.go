@@ -56,6 +56,13 @@ func (h *Handler) CreateRoutes() {
 			r.Get("/account/{id}", h.getAccount)
 			r.Put("/account/{id}", h.updateAccount)
 			r.Delete("/account/{id}", h.deleteAccount)
+			r.Get("/account/{id}/envelopes", h.getEnvelopes)
+
+			// envelopes
+			r.Post("/envelope", h.createEnvelope)
+			r.Get("/envelope/{id}", h.getEnvelope)
+			r.Put("/envelope/{id}", h.updateEnvelope)
+			r.Delete("/envelope/{id}", h.deleteEnvelope)
 		})
 
 		// public routes

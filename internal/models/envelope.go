@@ -16,6 +16,8 @@ type Envelope struct {
 	CurrentAmount float64        `gorm:"column:current_amount;not null;default:0.00"`
 	TargetAmount  float64        `gorm:"column:target_amount;not null;default:0.00"`
 	AutoAllocate  bool           `gorm:"column:auto_allocate;not null;default:false"`
+	IsActive      bool           `gorm:"column:is_active;not null;default:true"`
+	TargetedDate  *time.Time     `gorm:"column:targeted_date;"`
 	CreatedAt     time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt     time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt     gorm.DeletedAt `gorm:"index"`
@@ -88,6 +90,17 @@ func (em *EnvelopeModel) GetByIDAndAccountID(ctx context.Context, id uuid.UUID, 
 
 	var envelope *Envelope
 	if err := db.WithContext(ctx).Where("id = ? AND account_id = ?", id, accountID).First(&envelope).Error; err != nil {
+		return nil, err
+	}
+
+	return envelope, nil
+}
+
+func (em *EnvelopeModel) GetByNameAndAccountID(ctx context.Context, name string, accountID uuid.UUID, tx *gorm.DB) (*Envelope, error) {
+	db := getTxDB(em.db, tx)
+
+	var envelope *Envelope
+	if err := db.WithContext(ctx).Where("name = ? AND account_id = ?", name, accountID).First(&envelope).Error; err != nil {
 		return nil, err
 	}
 

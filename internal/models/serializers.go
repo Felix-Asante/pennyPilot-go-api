@@ -40,6 +40,30 @@ type AccountSerializer struct {
 	Balance  float64 `json:"balance"`
 }
 
+type EnvelopeSerializer struct {
+	CommonFields
+	Name          string  `json:"name"`
+	CurrentAmount float64 `json:"current_amount"`
+	TargetAmount  float64 `json:"target_amount"`
+	AutoAllocate  bool    `json:"auto_allocate"`
+	IsActive      bool    `json:"is_active"`
+}
+
+func SerializeEnvelope(envelope *Envelope) *EnvelopeSerializer {
+	return &EnvelopeSerializer{
+		CommonFields: CommonFields{
+			ID:        envelope.ID.String(),
+			CreatedAt: envelope.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt: envelope.UpdatedAt.Format("2006-01-02 15:04:05"),
+		},
+		Name:          envelope.Name,
+		CurrentAmount: envelope.CurrentAmount,
+		TargetAmount:  envelope.TargetAmount,
+		AutoAllocate:  envelope.AutoAllocate,
+		IsActive:      envelope.IsActive,
+	}
+}
+
 func SerializeUser(user *User) *UserSerializer {
 	return &UserSerializer{
 		ID:          user.ID,

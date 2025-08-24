@@ -50,6 +50,8 @@ func (h *Handler) createAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// trigger automatic envelope allocation
+
 	utils.WriteJSON(w, http.StatusCreated, models.SerializeAccount(account))
 }
 

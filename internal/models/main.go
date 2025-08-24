@@ -47,6 +47,7 @@ type Models struct {
 		GetAllByAccountID(ctx context.Context, accountID uuid.UUID, tx *gorm.DB) ([]*Envelope, error)
 		GetByID(ctx context.Context, id uuid.UUID, tx *gorm.DB) (*Envelope, error)
 		GetByIDAndAccountID(ctx context.Context, id uuid.UUID, accountID uuid.UUID, tx *gorm.DB) (*Envelope, error)
+		GetByNameAndAccountID(ctx context.Context, name string, accountID uuid.UUID, tx *gorm.DB) (*Envelope, error)
 	}
 	AllocationRule interface {
 		Create(ctx context.Context, allocationRule *AllocationRule, tx *gorm.DB) error
