@@ -30,6 +30,7 @@ type Models struct {
 		GetAllByUserID(userID string, tx *gorm.DB) ([]*Income, error)
 		GetByID(id string, tx *gorm.DB) (*Income, error)
 		Save(income *Income, tx *gorm.DB) error
+		GetUserTotalIncome(ctx context.Context, userId string, tx *gorm.DB) (float64, error)
 	}
 	Account interface {
 		Create(ctx context.Context, account *Account, tx *gorm.DB) error

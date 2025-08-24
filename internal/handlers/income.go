@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/dto"
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/models"
@@ -129,4 +132,98 @@ func (h *Handler) updateIncome(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusOK, models.SerializeIncome(income))
+}
+
+func (h *Handler) transferIncomeToAccount(w http.ResponseWriter, r *http.Request) {
+	var transferDto dto.TransferIncome
+	userID, err := getUserIdFromContext(r.Context())
+	if err != nil {
+		h.unauthorizedErrorResponse(w, r, err)
+		return
+	}
+
+	if err := utils.ReadAndValidateJSON(w, r, &transferDto); err != nil {
+		h.badRequestResponse(w, r, err)
+		return
+	}
+
+	if transferDto.Amount <= 0 {
+		h.badRequestResponse(w, r, errors.New("amount must be greater than 0"))
+		return
+	}
+
+	if len(transferDto.Accounts) == 0 {
+		h.badRequestResponse(w, r, errors.New("accounts is required"))
+		return
+	}
+
+	totalTransferAmount := transferDto.Amount * float64(len(transferDto.Accounts))
+	totalIncome, err := h.Models.Income.GetUserTotalIncome(r.Context(), userID, nil)
+
+	if err != nil {
+		h.internalServerError(w, r, err)
+		return
+	}
+
+	if totalIncome < totalTransferAmount {
+		h.badRequestResponse(w, r, errors.New("not enough income to transfer"))
+		return
+	}
+
+	wg := sync.WaitGroup{}
+	var mu sync.Mutex
+	var errs []error
+
+	for _, accountID := range transferDto.Accounts {
+		wg.Add(1)
+		go func(id string) {
+			defer wg.Done()
+			if err := h.moveIncomeToAccountWorker(r.Context(), userID, id, transferDto.Amount); err != nil {
+				mu.Lock()
+				errs = append(errs, err)
+				mu.Unlock()
+			}
+		}(accountID)
+	}
+
+	wg.Wait()
+
+	if len(errs) > 0 {
+		h.internalServerError(w, r, fmt.Errorf("errors occurred: %v", errs))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+	})
+}
+
+func (h *Handler) moveIncomeToAccountWorker(ctx context.Context, userId, accountId string, amount float64) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+
+		return h.DB.Transaction(func(tx *gorm.DB) error {
+
+			account, err := h.Models.Account.GetByIDAndUserID(ctx, accountId, userId, tx)
+			if err != nil {
+				return err
+			}
+
+			if account == nil {
+				return errors.New(fmt.Sprintf("account(%s) not found", accountId))
+			}
+
+			account.Balance += amount
+
+			if err := h.Models.Account.Save(ctx, account, tx); err != nil {
+				return err
+			}
+
+			// record transfer to calculate remaining income balance
+
+			return nil
+		})
+	}
 }

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"time"
 
 	"github.com/Felix-Asante/pennyPilot-go-api/internal/utils"
@@ -68,4 +69,16 @@ func (im *IncomeModel) Save(income *Income, tx *gorm.DB) error {
 	}
 
 	return nil
+}
+
+func (im *IncomeModel) GetUserTotalIncome(ctx context.Context, userId string, tx *gorm.DB) (float64, error) {
+	db := getTxDB(im.DB, tx)
+	var total float64
+
+	err := db.Model(&Income{}).
+		Select("COALESCE(SUM(amount),0)").
+		Where("user_id = ?", userId).
+		Scan(&total).Error
+
+	return total, err
 }

@@ -21,3 +21,8 @@ type UpdateIncomeDto struct {
 	Type         *utils.IncomeType      `json:"type" validate:"omitempty,oneof=salary freelance investment other" errormgs:"Type is required"`
 	Frequency    *utils.IncomeFrequency `json:"frequency" validate:"omitempty,oneof=weekly biweekly monthly yearly one-time" errormgs:"Frequency is required"`
 }
+
+type TransferIncome struct {
+	Amount   float64  `json:"amount" validate:"required,min=1"`
+	Accounts []string `json:"accounts" validate:"required"`
+}

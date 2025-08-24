@@ -46,6 +46,7 @@ func (h *Handler) CreateRoutes() {
 			// income
 			r.Post("/income", h.createIncome)
 			r.Put("/income/{id}", h.updateIncome)
+			r.Post("/income/transfer", h.transferIncomeToAccount)
 
 			// users
 			r.Get("/user/income", h.getUserIncome)
